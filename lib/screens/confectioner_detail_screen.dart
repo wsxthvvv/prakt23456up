@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../models/confectioner.dart';
 import '../repositories/confectioner_repository.dart';
+import '../repositories/workshop_repository.dart';
 import '../routing/query_codec.dart';
 import '../state/confectioner_list_notifier.dart';
 
@@ -41,11 +42,16 @@ class ConfectionerDetailScreen extends StatelessWidget {
                   const SizedBox(height: 12),
                   Text('Страна: ${c.country}'),
                   Text('Специализация: ${c.specialty}'),
+                  Text('Цех: ${_workshopName(context, c.workshopId)}'),
                   if (c.isDeleted) Text('Удалён: ${c.deletedAt}'),
                   const SizedBox(height: 24),
                   Wrap(
                     spacing: 8,
                     children: [
+                      FilledButton(
+                        onPressed: () => context.push('/confectioners/${c.id}/edit'),
+                        child: const Text('Изменить'),
+                      ),
                       FilledButton(onPressed: () => context.go('/confectioners'), child: const Text('К списку')),
                       if (c.isDeleted)
                         FilledButton.tonal(
@@ -74,6 +80,13 @@ class ConfectionerDetailScreen extends StatelessWidget {
         },
       ),
     );
+  }
+
+  String _workshopName(BuildContext context, int id) {
+    for (final workshop in context.read<WorkshopRepository>().all) {
+      if (workshop.id == id) return workshop.name;
+    }
+    return '—';
   }
 
   Future<void> _softDelete(BuildContext context, int id) async {

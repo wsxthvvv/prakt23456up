@@ -4,9 +4,11 @@ import 'package:provider/provider.dart';
 
 import '../core/breakpoints.dart';
 import '../routing/query_codec.dart';
-import '../data/reference_data.dart';
 import '../models/product.dart';
 import '../models/product_query.dart';
+import '../repositories/flavor_repository.dart';
+import '../repositories/reference_repository.dart';
+import '../repositories/workshop_repository.dart';
 import '../state/product_list_notifier.dart';
 import '../widgets/debounced_search_field.dart';
 import '../widgets/filter_dropdown.dart';
@@ -51,6 +53,12 @@ class _ProductListScreenState extends State<ProductListScreen> {
     final notifier = context.watch<ProductListNotifier>();
     final q = notifier.query;
     final compact = isCompactWidth(context);
+    final references = context.watch<ReferenceRepository>();
+    final flavors = context
+        .read<FlavorRepository>()
+        .all
+        .where((flavor) => !flavor.isDeleted || flavor.id == q.flavorTagId)
+        .toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -62,6 +70,11 @@ class _ProductListScreenState extends State<ProductListScreen> {
               icon: const Icon(Icons.delete_outline),
               label: Text('Удалить (${notifier.selected.length})'),
             ),
+          IconButton(
+            tooltip: 'Новое изделие',
+            onPressed: () => context.push('/products/new'),
+            icon: const Icon(Icons.add),
+          ),
           IconButton(
             tooltip: 'На главную',
             onPressed: () => context.go('/'),
@@ -102,7 +115,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
                   value: q.categoryId,
                   items: [
                     DropdownMenuItem(value: null, child: FilterDropdown.menuText('Все категории')),
-                    for (final c in productCategories)
+                    for (final c in references.categories)
                       DropdownMenuItem(value: c.id, child: FilterDropdown.menuText(c.name)),
                   ],
                   onChanged: (value) => _navigate(q.copyWith(categoryId: value)),
@@ -112,8 +125,8 @@ class _ProductListScreenState extends State<ProductListScreen> {
                   value: q.flavorTagId,
                   items: [
                     DropdownMenuItem(value: null, child: FilterDropdown.menuText('Любой вкус')),
-                    for (final t in flavorTags)
-                      DropdownMenuItem(value: t.id, child: FilterDropdown.menuText(t.name)),
+                    for (final flavor in flavors)
+                      DropdownMenuItem(value: flavor.id, child: FilterDropdown.menuText(flavor.name)),
                   ],
                   onChanged: (value) => _navigate(q.copyWith(flavorTagId: value)),
                 ),
@@ -191,6 +204,10 @@ class _ProductTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final q = notifier.query;
+    final references = context.read<ReferenceRepository>();
+    final workshopNames = {
+      for (final workshop in context.read<WorkshopRepository>().all) workshop.id: workshop.name,
+    };
     return EntityTable<Product>(
       items: notifier.result.items,
       idOf: (p) => p.id,
@@ -211,7 +228,8 @@ class _ProductTable extends StatelessWidget {
         TableColumnSpec(label: 'Артикул', sortField: 'sku', build: (p) => Text(p.sku)),
         TableColumnSpec(label: 'Год', sortField: 'year', numeric: true, build: (p) => Text('${p.year}')),
         TableColumnSpec(label: 'Масса, г', sortField: 'weight', numeric: true, build: (p) => Text('${p.weightGrams}')),
-        TableColumnSpec(label: 'Категория', build: (p) => Text(categoryName(p.categoryId))),
+        TableColumnSpec(label: 'Категория', build: (p) => Text(references.categoryName(p.categoryId))),
+        TableColumnSpec(label: 'Цех', build: (p) => Text(workshopNames[p.workshopId] ?? '—')),
         TableColumnSpec(label: 'Остаток', numeric: true, build: (p) => Text('${p.stockAvailable}/${p.stockTotal}')),
       ],
       actions: (p) => _productActions(context, notifier, p, onNavigate),
@@ -227,6 +245,10 @@ class _ProductCardList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final references = context.read<ReferenceRepository>();
+    final workshopNames = {
+      for (final workshop in context.read<WorkshopRepository>().all) workshop.id: workshop.name,
+    };
     return ListView.builder(
       itemCount: notifier.result.items.length,
       itemBuilder: (context, index) {
@@ -238,7 +260,7 @@ class _ProductCardList extends StatelessWidget {
               onChanged: (_) => notifier.toggleSelection(p.id),
             ),
             title: Text(p.name),
-            subtitle: Text('${p.sku} · ${categoryName(p.categoryId)} · ${p.year} г.'),
+            subtitle: Text('${p.sku} · ${references.categoryName(p.categoryId)} · ${workshopNames[p.workshopId] ?? '—'}'),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: _productActions(context, notifier, p, onNavigate),
@@ -262,6 +284,11 @@ List<Widget> _productActions(
       tooltip: 'Карточка',
       icon: const Icon(Icons.open_in_new),
       onPressed: () => context.push('/products/${p.id}'),
+    ),
+    IconButton(
+      tooltip: 'Изменить',
+      icon: const Icon(Icons.edit_outlined),
+      onPressed: () => context.push('/products/${p.id}/edit'),
     ),
     if (p.isDeleted)
       IconButton(

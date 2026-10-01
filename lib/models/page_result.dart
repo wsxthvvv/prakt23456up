@@ -21,3 +21,13 @@ class PageResult<T> {
         size = 10,
         total = 0;
 }
+
+PageResult<T> paginate<T>(List<T> rows, int page, int size) {
+  final total = rows.length;
+  final safePage = page < 1 ? 1 : page;
+  final safeSize = size < 1 ? 10 : size;
+  final from = (safePage - 1) * safeSize;
+  final to = (from + safeSize) > total ? total : (from + safeSize);
+  final items = from >= total ? <T>[] : rows.sublist(from, to);
+  return PageResult(items: items, page: safePage, size: safeSize, total: total);
+}

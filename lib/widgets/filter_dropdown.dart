@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// Выпадающий список фильтра с [isExpanded], чтобы не было overflow по ширине.
 class FilterDropdown<T> extends StatelessWidget {
   const FilterDropdown({
     super.key,

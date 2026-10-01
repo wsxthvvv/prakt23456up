@@ -16,6 +16,7 @@ class ConfectionerListNotifier extends ChangeNotifier {
   LoadStatus _status = LoadStatus.idle;
   String? _error;
   final Set<int> _selected = {};
+  int _ticket = 0;
 
   ConfectionerQuery get query => _query;
   PageResult<Confectioner> get result => _result;
@@ -25,17 +26,21 @@ class ConfectionerListNotifier extends ChangeNotifier {
   bool get hasSelection => _selected.isNotEmpty;
 
   Future<void> load() async {
+    final ticket = ++_ticket;
     _status = LoadStatus.loading;
     _error = null;
     notifyListeners();
     try {
-      _result = await _repository.find(_query);
+      final result = await _repository.find(_query);
+      if (ticket != _ticket) return;
+      _result = result;
       _status = LoadStatus.success;
     } catch (e) {
+      if (ticket != _ticket || '$e'.contains('отменён')) return;
       _error = 'Не удалось загрузить список кондитеров: $e';
       _status = LoadStatus.error;
     }
-    notifyListeners();
+    if (ticket == _ticket) notifyListeners();
   }
 
   Future<void> applyQuery(ConfectionerQuery next) async {

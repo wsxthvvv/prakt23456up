@@ -1,9 +1,12 @@
+import '../core/json_values.dart';
+
 class Confectioner {
   final int id;
   final String lastName;
   final String firstName;
   final String country;
   final String specialty;
+  final int workshopId;
   final DateTime? deletedAt;
 
   const Confectioner({
@@ -12,6 +15,7 @@ class Confectioner {
     required this.firstName,
     required this.country,
     required this.specialty,
+    required this.workshopId,
     this.deletedAt,
   });
 
@@ -24,6 +28,7 @@ class Confectioner {
     String? firstName,
     String? country,
     String? specialty,
+    int? workshopId,
     DateTime? deletedAt,
     bool clearDeletedAt = false,
   }) {
@@ -33,7 +38,28 @@ class Confectioner {
       firstName: firstName ?? this.firstName,
       country: country ?? this.country,
       specialty: specialty ?? this.specialty,
+      workshopId: workshopId ?? this.workshopId,
       deletedAt: clearDeletedAt ? null : (deletedAt ?? this.deletedAt),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'lastName': lastName,
+        'firstName': firstName,
+        'country': country,
+        'specialty': specialty,
+        'workshopId': workshopId,
+        'deletedAt': deletedAt?.toIso8601String(),
+      };
+
+  factory Confectioner.fromJson(Map<String, dynamic> json) => Confectioner(
+        id: jsonInt(json['id']),
+        lastName: jsonString(json['lastName']),
+        firstName: jsonString(json['firstName']),
+        country: jsonString(json['country']),
+        specialty: jsonString(json['specialty']),
+        workshopId: jsonRelationId(json, 'workshopId', 'workshop', 1),
+        deletedAt: jsonDate(json['deletedAt']),
+      );
 }

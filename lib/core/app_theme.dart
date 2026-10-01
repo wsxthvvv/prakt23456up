@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// Нежная палитра кондитерской: фисташковый + пудрово-розовый.
 abstract final class AppTheme {
   static const _pistachio = Color(0xFF94B884);
   static const _pistachioDark = Color(0xFF5F7A54);

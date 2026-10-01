@@ -6,7 +6,6 @@ import '../state/product_list_notifier.dart';
 import 'query_codec.dart';
 import 'query_equality.dart';
 
-/// Синхронизирует query-параметры URI с [ProductListNotifier] (в т.ч. «назад» в браузере).
 class ProductQuerySync extends StatefulWidget {
   const ProductQuerySync({super.key, required this.child});
 

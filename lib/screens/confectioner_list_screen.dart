@@ -4,9 +4,10 @@ import 'package:provider/provider.dart';
 
 import '../core/breakpoints.dart';
 import '../routing/query_codec.dart';
-import '../data/reference_data.dart';
 import '../models/confectioner.dart';
 import '../models/confectioner_query.dart';
+import '../repositories/reference_repository.dart';
+import '../repositories/workshop_repository.dart';
 import '../state/confectioner_list_notifier.dart';
 import '../widgets/debounced_search_field.dart';
 import '../widgets/filter_dropdown.dart';
@@ -51,6 +52,10 @@ class _ConfectionerListScreenState extends State<ConfectionerListScreen> {
     final notifier = context.watch<ConfectionerListNotifier>();
     final q = notifier.query;
     final compact = isCompactWidth(context);
+    final references = context.watch<ReferenceRepository>();
+    final workshopNames = {
+      for (final workshop in context.read<WorkshopRepository>().all) workshop.id: workshop.name,
+    };
 
     return Scaffold(
       appBar: AppBar(
@@ -62,6 +67,11 @@ class _ConfectionerListScreenState extends State<ConfectionerListScreen> {
               icon: const Icon(Icons.delete_outline),
               label: Text('Удалить (${notifier.selected.length})'),
             ),
+          IconButton(
+            tooltip: 'Новый кондитер',
+            onPressed: () => context.push('/confectioners/new'),
+            icon: const Icon(Icons.add),
+          ),
           IconButton(onPressed: () => context.go('/'), icon: const Icon(Icons.home)),
         ],
       ),
@@ -95,7 +105,7 @@ class _ConfectionerListScreenState extends State<ConfectionerListScreen> {
                   value: q.country,
                   items: [
                     DropdownMenuItem(value: null, child: FilterDropdown.menuText('Все страны')),
-                    for (final c in confectionerCountries)
+                    for (final c in references.countries)
                       DropdownMenuItem(value: c, child: FilterDropdown.menuText(c)),
                   ],
                   onChanged: (value) => _navigate(q.copyWith(country: value)),
@@ -106,7 +116,7 @@ class _ConfectionerListScreenState extends State<ConfectionerListScreen> {
                   value: q.specialty,
                   items: [
                     DropdownMenuItem(value: null, child: FilterDropdown.menuText('Любая')),
-                    for (final s in confectionerSpecialties)
+                    for (final s in references.specialties)
                       DropdownMenuItem(value: s, child: FilterDropdown.menuText(s)),
                   ],
                   onChanged: (value) => _navigate(q.copyWith(specialty: value)),
@@ -141,7 +151,7 @@ class _ConfectionerListScreenState extends State<ConfectionerListScreen> {
                                       onChanged: (_) => notifier.toggleSelection(c.id),
                                     ),
                                     title: Text(c.fullName),
-                                    subtitle: Text('${c.country} · ${c.specialty}'),
+                                    subtitle: Text('${c.country} · ${c.specialty} · ${workshopNames[c.workshopId] ?? '—'}'),
                                     trailing: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: _confectionerActions(context, notifier, c, _navigate),
@@ -169,6 +179,7 @@ class _ConfectionerListScreenState extends State<ConfectionerListScreen> {
                                 TableColumnSpec(label: 'Имя', sortField: 'firstName', build: (c) => Text(c.firstName)),
                                 TableColumnSpec(label: 'Страна', sortField: 'country', build: (c) => Text(c.country)),
                                 TableColumnSpec(label: 'Специализация', sortField: 'specialty', build: (c) => Text(c.specialty)),
+                                TableColumnSpec(label: 'Цех', build: (c) => Text(workshopNames[c.workshopId] ?? '—')),
                               ],
                               actions: (c) => _confectionerActions(context, notifier, c, _navigate),
                             ),
@@ -200,6 +211,11 @@ List<Widget> _confectionerActions(
       tooltip: 'Карточка',
       icon: const Icon(Icons.open_in_new),
       onPressed: () => context.push('/confectioners/${c.id}'),
+    ),
+    IconButton(
+      tooltip: 'Изменить',
+      icon: const Icon(Icons.edit_outlined),
+      onPressed: () => context.push('/confectioners/${c.id}/edit'),
     ),
     if (c.isDeleted)
       IconButton(

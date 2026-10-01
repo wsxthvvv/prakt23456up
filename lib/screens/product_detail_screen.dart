@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../data/reference_data.dart';
-import '../data/seed_data.dart';
 import '../models/product.dart';
+import '../repositories/confectioner_repository.dart';
+import '../repositories/flavor_repository.dart';
 import '../repositories/product_repository.dart';
+import '../repositories/reference_repository.dart';
+import '../repositories/workshop_repository.dart';
 import '../routing/query_codec.dart';
 import '../state/product_list_notifier.dart';
 
@@ -44,16 +46,30 @@ class ProductDetailScreen extends StatelessWidget {
             );
           }
 
+          final references = context.read<ReferenceRepository>();
+          final confectioners = context.read<ConfectionerRepository>().all;
+          final flavors = context.read<FlavorRepository>().all;
+          final workshops = context.read<WorkshopRepository>().all;
           final confectionerNames = product.confectionerIds
-              .map(
-                (id) => seedConfectioners
-                    .firstWhere(
-                      (c) => c.id == id,
-                      orElse: () => seedConfectioners.first,
-                    )
-                    .fullName,
-              )
+              .map((id) {
+                for (final confectioner in confectioners) {
+                  if (confectioner.id == id) return confectioner.fullName;
+                }
+                return '?';
+              })
               .join(', ');
+          final flavorLabel = product.flavorTagIds
+              .map((id) {
+                for (final flavor in flavors) {
+                  if (flavor.id == id) return flavor.name;
+                }
+                return '?';
+              })
+              .join(', ');
+          var workshopLabel = '—';
+          for (final workshop in workshops) {
+            if (workshop.id == product.workshopId) workshopLabel = workshop.name;
+          }
 
           return Center(
             child: ConstrainedBox(
@@ -64,8 +80,9 @@ class ProductDetailScreen extends StatelessWidget {
                   Text(product.name, style: Theme.of(context).textTheme.headlineSmall),
                   const SizedBox(height: 16),
                   _row('Артикул', product.sku),
-                  _row('Категория', categoryName(product.categoryId)),
-                  _row('Вкусы', flavorNames(product.flavorTagIds)),
+                  _row('Категория', references.categoryName(product.categoryId)),
+                  _row('Цех', workshopLabel),
+                  _row('Вкусы', flavorLabel.isEmpty ? '—' : flavorLabel),
                   _row('Год в ассортименте', '${product.year}'),
                   _row('Масса', '${product.weightGrams} г'),
                   _row('Кондитеры', confectionerNames),
@@ -76,6 +93,10 @@ class ProductDetailScreen extends StatelessWidget {
                     spacing: 8,
                     runSpacing: 8,
                     children: [
+                      FilledButton(
+                        onPressed: () => context.push('/products/${product.id}/edit'),
+                        child: const Text('Изменить'),
+                      ),
                       FilledButton(onPressed: () => context.go('/products'), child: const Text('К каталогу')),
                       if (product.isDeleted)
                         FilledButton.tonal(
