@@ -1,0 +1,48 @@
+import '../models/confectioner.dart';
+import '../models/product.dart';
+
+final seedConfectioners = <Confectioner>[
+  const Confectioner(id: 1, lastName: 'Иванова', firstName: 'Мария', country: 'Россия', specialty: 'Торты'),
+  const Confectioner(id: 2, lastName: 'Петров', firstName: 'Алексей', country: 'Россия', specialty: 'Пирожные'),
+  const Confectioner(id: 3, lastName: 'Дюмонова', firstName: 'Клара', country: 'Франция', specialty: 'Десерты'),
+  const Confectioner(id: 4, lastName: 'Романов', firstName: 'Лука', country: 'Италия', specialty: 'Выпечка'),
+  const Confectioner(id: 5, lastName: 'Смирнова', firstName: 'Елена', country: 'Россия', specialty: 'Торты'),
+  const Confectioner(id: 6, lastName: 'Бернардова', firstName: 'Анна', country: 'Бельгия', specialty: 'Шоколад'),
+  const Confectioner(id: 7, lastName: 'Козлова', firstName: 'Анна', country: 'Россия', specialty: 'Пирожные'),
+  const Confectioner(id: 8, lastName: 'Мартинова', firstName: 'Софья', country: 'Франция', specialty: 'Десерты'),
+  const Confectioner(id: 9, lastName: 'Волков', firstName: 'Дмитрий', country: 'Россия', specialty: 'Выпечка'),
+  const Confectioner(id: 10, lastName: 'Бянкова', firstName: 'Юлия', country: 'Италия', specialty: 'Торты'),
+];
+
+final seedProducts = <Product>[
+  const Product(id: 1, name: 'Наполеон классический', sku: 'NYM-001', year: 2019, weightGrams: 1200, categoryId: 1, confectionerIds: [1, 5], flavorTagIds: [2, 4], stockTotal: 20, stockAvailable: 12),
+  const Product(id: 2, name: 'Медовик с кремом', sku: 'NYM-002', year: 2020, weightGrams: 900, categoryId: 1, confectionerIds: [1], flavorTagIds: [2], stockTotal: 15, stockAvailable: 8),
+  const Product(id: 3, name: 'Эклер шоколадный', sku: 'NYM-003', year: 2021, weightGrams: 80, categoryId: 2, confectionerIds: [2, 7], flavorTagIds: [1], stockTotal: 100, stockAvailable: 64),
+  const Product(id: 4, name: 'Макарон ассорти', sku: 'NYM-004', year: 2022, weightGrams: 120, categoryId: 2, confectionerIds: [3], flavorTagIds: [1, 3], stockTotal: 80, stockAvailable: 45),
+  const Product(id: 5, name: 'Круассан миндальный', sku: 'NYM-005', year: 2023, weightGrams: 70, categoryId: 4, confectionerIds: [4, 9], flavorTagIds: [4], stockTotal: 60, stockAvailable: 22),
+  const Product(id: 6, name: 'Тирамису в стакане', sku: 'NYM-006', year: 2024, weightGrams: 150, categoryId: 5, confectionerIds: [3, 8], flavorTagIds: [1, 2], stockTotal: 40, stockAvailable: 18),
+  const Product(id: 7, name: 'Панна-котта ягодная', sku: 'NYM-007', year: 2023, weightGrams: 130, categoryId: 5, confectionerIds: [8], flavorTagIds: [3], stockTotal: 35, stockAvailable: 20),
+  const Product(id: 8, name: 'Печенье овсяное', sku: 'NYM-008', year: 2019, weightGrams: 200, categoryId: 3, confectionerIds: [9], flavorTagIds: [4], stockTotal: 120, stockAvailable: 90),
+  const Product(id: 9, name: 'Брауни ореховый', sku: 'NYM-009', year: 2020, weightGrams: 90, categoryId: 3, confectionerIds: [6], flavorTagIds: [1, 4], stockTotal: 70, stockAvailable: 33),
+  const Product(id: 10, name: 'Красный бархат', sku: 'NYM-010', year: 2021, weightGrams: 1500, categoryId: 1, confectionerIds: [5, 10], flavorTagIds: [3], stockTotal: 12, stockAvailable: 5),
+  const Product(id: 11, name: 'Чизкейк классический', sku: 'NYM-011', year: 2022, weightGrams: 1100, categoryId: 1, confectionerIds: [10], flavorTagIds: [2], stockTotal: 18, stockAvailable: 11),
+  const Product(id: 12, name: 'Профитроль с карамелью', sku: 'NYM-012', year: 2023, weightGrams: 60, categoryId: 2, confectionerIds: [2], flavorTagIds: [5], stockTotal: 90, stockAvailable: 55),
+  const Product(id: 13, name: 'Багет с изюмом', sku: 'NYM-013', year: 2024, weightGrams: 350, categoryId: 4, confectionerIds: [4], flavorTagIds: [2], stockTotal: 25, stockAvailable: 14),
+  const Product(id: 14, name: 'Тарт с лимоном', sku: 'NYM-014', year: 2020, weightGrams: 400, categoryId: 2, confectionerIds: [7], flavorTagIds: [3], stockTotal: 30, stockAvailable: 16),
+  const Product(id: 15, name: 'Кекс шоколадный', sku: 'NYM-015', year: 2021, weightGrams: 110, categoryId: 3, confectionerIds: [6, 9], flavorTagIds: [1], stockTotal: 85, stockAvailable: 40),
+  const Product(id: 16, name: 'Павлова с ягодами', sku: 'NYM-016', year: 2022, weightGrams: 500, categoryId: 1, confectionerIds: [5], flavorTagIds: [3], stockTotal: 10, stockAvailable: 4),
+  const Product(id: 17, name: 'Канеле бордо', sku: 'NYM-017', year: 2023, weightGrams: 50, categoryId: 2, confectionerIds: [3], flavorTagIds: [5], stockTotal: 55, stockAvailable: 28),
+  const Product(id: 18, name: 'Булочка с корицей', sku: 'NYM-018', year: 2024, weightGrams: 180, categoryId: 4, confectionerIds: [9], flavorTagIds: [2, 5], stockTotal: 45, stockAvailable: 30),
+  const Product(id: 19, name: 'Мусс с манго', sku: 'NYM-019', year: 2023, weightGrams: 140, categoryId: 5, confectionerIds: [8], flavorTagIds: [3], stockTotal: 32, stockAvailable: 19),
+  const Product(id: 20, name: 'Торт «Прага»', sku: 'NYM-020', year: 2019, weightGrams: 1000, categoryId: 1, confectionerIds: [1, 5], flavorTagIds: [1], stockTotal: 22, stockAvailable: 9),
+  const Product(id: 21, name: 'Печенье с миндалем', sku: 'NYM-021', year: 2022, weightGrams: 160, categoryId: 3, confectionerIds: [4], flavorTagIds: [4], stockTotal: 65, stockAvailable: 42),
+  const Product(id: 22, name: 'Торт три шоколада', sku: 'NYM-022', year: 2024, weightGrams: 1300, categoryId: 1, confectionerIds: [6, 10], flavorTagIds: [1], stockTotal: 14, stockAvailable: 7),
+  const Product(id: 23, name: 'Зефир ванильный', sku: 'NYM-023', year: 2020, weightGrams: 850, categoryId: 1, confectionerIds: [1], flavorTagIds: [2], stockTotal: 16, stockAvailable: 10),
+  const Product(id: 24, name: 'Крем-брюле в коробке', sku: 'NYM-024', year: 2021, weightGrams: 95, categoryId: 2, confectionerIds: [7], flavorTagIds: [2], stockTotal: 75, stockAvailable: 48),
+  const Product(id: 25, name: 'Ролл с корицей', sku: 'NYM-025', year: 2022, weightGrams: 85, categoryId: 4, confectionerIds: [9], flavorTagIds: [4], stockTotal: 50, stockAvailable: 35),
+  const Product(id: 26, name: 'Вафля бельгийская', sku: 'NYM-026', year: 2023, weightGrams: 65, categoryId: 3, confectionerIds: [6], flavorTagIds: [1], stockTotal: 90, stockAvailable: 52),
+  const Product(id: 27, name: 'Меренговый тарт', sku: 'NYM-027', year: 2024, weightGrams: 980, categoryId: 1, confectionerIds: [5], flavorTagIds: [3], stockTotal: 11, stockAvailable: 6),
+  const Product(id: 28, name: 'Париж с клубникой', sku: 'NYM-028', year: 2019, weightGrams: 140, categoryId: 2, confectionerIds: [2], flavorTagIds: [5], stockTotal: 60, stockAvailable: 38),
+  const Product(id: 29, name: 'Суфле вишневый', sku: 'NYM-029', year: 2022, weightGrams: 720, categoryId: 1, confectionerIds: [10], flavorTagIds: [3], stockTotal: 13, stockAvailable: 8),
+  const Product(id: 30, name: 'Крем-брюле клубничка', sku: 'NYM-030', year: 2024, weightGrams: 55, categoryId: 5, confectionerIds: [3, 8], flavorTagIds: [2], stockTotal: 48, stockAvailable: 31),
+];
