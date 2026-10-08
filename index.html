@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base href="/prakt23456up/">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="Кондитерская «нямка»">
+
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="нямка">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>Кондитерская «нямка»</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: #f5edef;
+    }
+    #nyamka-boot {
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      font-family: Georgia, "Times New Roman", serif;
+      color: #5f7a54;
+    }
+    #nyamka-boot h1 {
+      margin: 0;
+      font-size: 32px;
+      font-weight: normal;
+    }
+    #nyamka-boot .spin {
+      width: 36px;
+      height: 36px;
+      border: 3px solid #fbe8ef;
+      border-top-color: #c9889e;
+      border-radius: 50%;
+      animation: nyamka-spin 0.8s linear infinite;
+    }
+    @keyframes nyamka-spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div id="nyamka-boot">
+    <h1>Кондитерская «нямка»</h1>
+    <div class="spin" role="progressbar" aria-label="Загрузка"></div>
+  </div>
+  <script>
+    window.addEventListener('flutter-first-frame', function () {
+      var boot = document.getElementById('nyamka-boot');
+      if (boot) boot.remove();
+    });
+  </script>
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>
