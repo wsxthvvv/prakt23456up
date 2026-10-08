@@ -31,6 +31,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
   final _sku = TextEditingController();
   final _year = TextEditingController();
   final _weight = TextEditingController();
+  final _price = TextEditingController();
   final _stockTotal = TextEditingController();
   final _stockAvailable = TextEditingController();
 
@@ -58,6 +59,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     _sku.dispose();
     _year.dispose();
     _weight.dispose();
+    _price.dispose();
     _stockTotal.dispose();
     _stockAvailable.dispose();
     super.dispose();
@@ -77,6 +79,9 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     _sku.text = product?.sku ?? '';
     _year.text = product == null ? '' : '${product.year}';
     _weight.text = product == null ? '' : '${product.weightGrams}';
+    _price.text = product == null || product.priceRub == 0
+        ? ''
+        : '${product.priceRub}';
     _stockTotal.text = product == null ? '' : '${product.stockTotal}';
     _stockAvailable.text = product == null ? '' : '${product.stockAvailable}';
     _categoryId = product?.categoryId;
@@ -97,6 +102,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
       _sku.text,
       _year.text,
       _weight.text,
+      _price.text,
       _stockTotal.text,
       _stockAvailable.text,
       _categoryId,
@@ -158,6 +164,19 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
         V.required('Укажите массу'),
         V.integer(min: 1, max: 20000),
       ]),
+    ),
+    TextFieldSpec(
+      label: 'Цена, ₽',
+      controller: _price,
+      keyboardType: TextInputType.number,
+      onChanged: _touch,
+      validator: (value) {
+        final local = V.combine([
+          V.required('Укажите цену'),
+          V.integer(min: 1, max: 100000),
+        ])(value);
+        return local ?? _serverErrors['priceRub'];
+      },
     ),
     TextFieldSpec(
       label: 'На складе, шт.',
@@ -228,6 +247,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
       sku: _sku.text.trim(),
       year: int.parse(_year.text.trim()),
       weightGrams: int.parse(_weight.text.trim()),
+      priceRub: int.parse(_price.text.trim()),
       categoryId: _categoryId!,
       workshopId: _workshopId!,
       confectionerIds: _confectionerIds,

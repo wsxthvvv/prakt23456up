@@ -9,6 +9,7 @@ class AppUser {
     required this.fullName,
     required this.email,
     required this.role,
+    this.pbId = '',
   });
 
   final int id;
@@ -16,9 +17,11 @@ class AppUser {
   final String fullName;
   final String email;
   final AppRole role;
+  final String pbId;
 
   Map<String, dynamic> toJson() => {
     'id': id,
+    'pbId': pbId,
     'username': username,
     'fullName': fullName,
     'email': email,
@@ -31,6 +34,7 @@ class AppUser {
     if (role == null || id is! num) return null;
     return AppUser(
       id: id.toInt(),
+      pbId: '${json['pbId'] ?? ''}',
       username: '${json['username'] ?? ''}',
       fullName: '${json['fullName'] ?? ''}',
       email: '${json['email'] ?? ''}',

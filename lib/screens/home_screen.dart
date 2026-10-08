@@ -57,6 +57,8 @@ class HomeScreen extends StatelessWidget {
               const SizedBox(height: 24),
               if (auth.allows(AppAction.viewCatalog)) ...[
                 _link(context, '/products', 'Каталог изделий'),
+                if (auth.allows(AppAction.manageCatalog))
+                  _link(context, '/categories', 'Категории'),
                 _link(context, '/confectioners', 'Кондитеры'),
                 _link(context, '/flavors', 'Вкусы'),
                 _link(context, '/workshops', 'Цеха'),

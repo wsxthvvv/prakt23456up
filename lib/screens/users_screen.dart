@@ -30,7 +30,10 @@ class _UsersScreenState extends State<UsersScreen> {
       _error = null;
     });
     try {
-      final response = await context.read<Dio>().get('/users');
+      final response = await context.read<Dio>().get(
+        '/collections/users/records',
+        queryParameters: {'page': 1, 'perPage': 50, 'sort': 'code'},
+      );
       final data = response.data;
       final items = data is Map && data['items'] is List
           ? data['items'] as List
@@ -39,7 +42,13 @@ class _UsersScreenState extends State<UsersScreen> {
       setState(() {
         _items = [
           for (final item in items)
-            if (item is Map) Map<String, dynamic>.from(item),
+            if (item is Map)
+              {
+                'pbId': item['id'],
+                'fullName': item['fullName'] ?? '',
+                'username': item['email'] ?? '',
+                'role': item['role'] ?? 'buyer',
+              },
         ];
         _loading = false;
       });
@@ -52,9 +61,12 @@ class _UsersScreenState extends State<UsersScreen> {
     }
   }
 
-  Future<void> _save(int id, String role) async {
+  Future<void> _save(String id, String role) async {
     try {
-      await context.read<Dio>().patch('/users/$id', data: {'role': role});
+      await context.read<Dio>().patch(
+        '/collections/users/records/$id',
+        data: {'role': role},
+      );
       await _load();
     } on DioException catch (error) {
       if (!mounted) return;
@@ -103,7 +115,7 @@ class _UsersScreenState extends State<UsersScreen> {
                 ],
                 onChanged: (value) {
                   if (value != null && value != item['role']) {
-                    _save(item['id'] as int, value);
+                    _save('${item['pbId']}', value);
                   }
                 },
               ),

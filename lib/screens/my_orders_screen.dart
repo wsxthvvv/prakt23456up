@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../auth/auth_notifier.dart';
 import '../core/api_exceptions.dart';
+import '../repositories/order_gateway.dart';
 
 class MyOrdersScreen extends StatefulWidget {
   const MyOrdersScreen({super.key});
@@ -13,26 +15,15 @@ class MyOrdersScreen extends StatefulWidget {
 }
 
 class _MyOrdersScreenState extends State<MyOrdersScreen> {
-  final _product = TextEditingController();
-  final _qty = TextEditingController(text: '1');
-  List<Map<String, dynamic>> _items = [];
+  List<OrderView> _items = [];
+  int? _customerCode;
   String? _error;
-  String? _productError;
-  String? _qtyError;
   bool _loading = true;
-  bool _busy = false;
 
   @override
   void initState() {
     super.initState();
     _load();
-  }
-
-  @override
-  void dispose() {
-    _product.dispose();
-    _qty.dispose();
-    super.dispose();
   }
 
   Future<void> _load() async {
@@ -41,60 +32,26 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
       _error = null;
     });
     try {
-      final response = await context.read<Dio>().get('/my-orders');
-      final data = response.data;
-      final items = data is Map && data['items'] is List
-          ? data['items'] as List
-          : const [];
+      final gateway = OrderGateway(context.read<Dio>());
+      final userId = context.read<AuthNotifier>().user?.pbId ?? '';
+      final customerCode = await gateway.customerCodeForUser(userId);
+      final items = await gateway.list();
       if (!mounted) return;
       setState(() {
+        _customerCode = customerCode;
         _items = [
           for (final item in items)
-            if (item is Map) Map<String, dynamic>.from(item),
+            if (customerCode == null || item.customerCode == customerCode)
+              item,
         ];
         _loading = false;
       });
-    } on DioException catch (error) {
+    } on ApiException catch (error) {
       if (!mounted) return;
       setState(() {
-        _error = '${mapDioError(error)}';
+        _error = error.message;
         _loading = false;
       });
-    }
-  }
-
-  Future<void> _place() async {
-    final qty = int.tryParse(_qty.text.trim());
-    final productError = _product.text.trim().length < 2
-        ? 'Укажите изделие'
-        : null;
-    final qtyError = qty == null || qty < 1 ? 'Укажите количество' : null;
-    setState(() {
-      _productError = productError;
-      _qtyError = qtyError;
-    });
-    if (productError != null || qtyError != null) return;
-    setState(() => _busy = true);
-    try {
-      await context.read<Dio>().post(
-        '/my-orders',
-        data: {'productName': _product.text.trim(), 'qty': qty},
-      );
-      _product.clear();
-      await _load();
-    } on DioException catch (error) {
-      if (!mounted) return;
-      final mapped = mapDioError(error);
-      if (mapped is ValidationException) {
-        setState(() {
-          _productError = mapped.errors['productName'];
-          _qtyError = mapped.errors['qty'];
-        });
-      } else {
-        setState(() => _error = mapped.message);
-      }
-    } finally {
-      if (mounted) setState(() => _busy = false);
     }
   }
 
@@ -104,6 +61,13 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
       appBar: AppBar(
         title: const Text('Мои заказы'),
         actions: [
+          IconButton(
+            tooltip: 'Новый заказ',
+            onPressed: _customerCode == null
+                ? null
+                : () => context.go('/my-orders/new?customer=$_customerCode'),
+            icon: const Icon(Icons.add),
+          ),
           IconButton(
             tooltip: 'На главную',
             onPressed: () => context.go('/'),
@@ -115,29 +79,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
         padding: const EdgeInsets.all(16),
         children: [
           const Text(
-            'Этот экран есть только у покупателя: здесь свои заказы, чужие не видны.',
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _product,
-            decoration: InputDecoration(
-              labelText: 'Изделие',
-              errorText: _productError,
-            ),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _qty,
-            decoration: InputDecoration(
-              labelText: 'Количество',
-              errorText: _qtyError,
-            ),
-            keyboardType: TextInputType.number,
-          ),
-          const SizedBox(height: 12),
-          FilledButton(
-            onPressed: _busy ? null : _place,
-            child: const Text('Оформить заказ'),
+            'Этот экран есть только у покупателя. Цена считается со скидкой действующей карты.',
           ),
           const SizedBox(height: 16),
           if (_loading) const Center(child: CircularProgressIndicator()),
@@ -146,12 +88,17 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
               _error!,
               style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
+          if (!_loading && _error == null && _items.isEmpty)
+            const Text('Заказов пока нет.'),
           for (final item in _items)
             ListTile(
-              title: Text('${item['productName']}'),
+              title: Text('${item.dueOn} · ${item.totalRub} ₽'),
               subtitle: Text(
-                '${item['qty']} шт. · ${item['status'] == 'closed' ? 'закрыт' : 'открыт'}',
+                item.lines
+                    .map((line) => '${line.productName} × ${line.qty}')
+                    .join(', '),
               ),
+              trailing: Text(item.status == 'closed' ? 'закрыт' : 'открыт'),
             ),
         ],
       ),

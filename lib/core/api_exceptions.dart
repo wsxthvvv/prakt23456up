@@ -54,6 +54,7 @@ ApiException mapHttpError(int status, dynamic body) {
     ),
     404 => NotFoundException(message ?? 'Запись не найдена.'),
     409 => ConflictException(message ?? 'Операция невозможна.'),
+    400 => _pocketBaseError(body, message),
     422 => ValidationException(
       message ?? 'Ошибка валидации',
       (body is Map && body['errors'] is Map)
@@ -63,6 +64,47 @@ ApiException mapHttpError(int status, dynamic body) {
           : const {},
     ),
     _ => ServerException(message ?? 'Неизвестная ошибка (код $status).'),
+  };
+}
+
+ApiException _pocketBaseError(dynamic body, String? message) {
+  final data = body is Map ? body['data'] : null;
+  if (data is! Map || data.isEmpty) {
+    return ServerException(message ?? 'Запрос отклонён.');
+  }
+  final errors = <String, String>{};
+  var onlyUnique = true;
+  for (final entry in data.entries) {
+    final value = entry.value;
+    final code = value is Map ? '${value['code'] ?? ''}' : '';
+    final raw = value is Map && value['message'] is String
+        ? value['message'] as String
+        : 'Проверьте поле';
+    if (code != 'validation_not_unique') onlyUnique = false;
+    errors['${entry.key}'] = _russianFieldMessage(code, raw);
+  }
+  final details = errors.values.where((item) => item.isNotEmpty).join('\n');
+  if (onlyUnique) {
+    return ConflictException(
+      details.isEmpty ? 'Такое значение уже есть' : details,
+    );
+  }
+  return ValidationException(
+    details.isEmpty ? 'Проверьте поля формы' : details,
+    errors,
+  );
+}
+
+String _russianFieldMessage(String code, String raw) {
+  return switch (code) {
+    'validation_required' => 'Заполните поле',
+    'validation_not_unique' => 'Такое значение уже есть',
+    'validation_min_text_constraint' ||
+    'validation_max_text_constraint' => 'Проверьте длину',
+    'validation_min_number_constraint' ||
+    'validation_max_number_constraint' => 'Число вне допустимого диапазона',
+    'validation_invalid_email' => 'Укажите почту в верном формате',
+    _ => raw,
   };
 }
 

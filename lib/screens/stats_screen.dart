@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../core/api_exceptions.dart';
+import '../repositories/order_gateway.dart';
 
 class StatsScreen extends StatefulWidget {
   const StatsScreen({super.key});
@@ -14,6 +15,7 @@ class StatsScreen extends StatefulWidget {
 
 class _StatsScreenState extends State<StatsScreen> {
   Map<String, dynamic>? _stats;
+  List<({String label, int amount})> _bars = const [];
   String? _error;
   bool _loading = true;
 
@@ -25,11 +27,39 @@ class _StatsScreenState extends State<StatsScreen> {
 
   Future<void> _load() async {
     try {
-      final response = await context.read<Dio>().get('/stats');
-      final data = response.data;
+      final dio = context.read<Dio>();
+      final orders = await OrderGateway(dio).list();
+      final products = await dio.get(
+        '/collections/products/records',
+        queryParameters: {'perPage': 1, 'filter': 'deleted = false'},
+      );
+      final users = await dio.get(
+        '/collections/users/records',
+        queryParameters: {'perPage': 1},
+      );
+      final customers = await dio.get(
+        '/collections/customers/records',
+        queryParameters: {'perPage': 1, 'filter': 'deleted = false'},
+      );
+      final bars = <String, int>{};
+      for (final order in orders) {
+        for (final line in order.lines) {
+          bars[line.productName] =
+              (bars[line.productName] ?? 0) + line.unitPriceRub * line.qty;
+        }
+      }
       if (!mounted) return;
       setState(() {
-        _stats = data is Map ? Map<String, dynamic>.from(data) : {};
+        _stats = {
+          'products': _total(products.data),
+          'orders': orders.length,
+          'users': _total(users.data),
+          'customers': _total(customers.data),
+        };
+        _bars = [
+          for (final entry in bars.entries)
+            (label: entry.key, amount: entry.value),
+        ]..sort((a, b) => b.amount.compareTo(a.amount));
         _loading = false;
       });
     } on DioException catch (error) {
@@ -38,7 +68,20 @@ class _StatsScreenState extends State<StatsScreen> {
         _error = '${mapDioError(error)}';
         _loading = false;
       });
+    } on ApiException catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _error = error.message;
+        _loading = false;
+      });
     }
+  }
+
+  int _total(dynamic data) {
+    if (data is Map && data['totalItems'] is num) {
+      return (data['totalItems'] as num).toInt();
+    }
+    return 0;
   }
 
   @override
@@ -83,6 +126,28 @@ class _StatsScreenState extends State<StatsScreen> {
               title: const Text('Покупатели в картотеке'),
               trailing: Text('${stats['customers'] ?? 0}'),
             ),
+            const SizedBox(height: 16),
+            const Text('Сумма заказов по изделиям'),
+            const SizedBox(height: 8),
+            if (_bars.isEmpty) const Text('Заказов с позициями пока нет.'),
+            for (final bar in _bars)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  children: [
+                    SizedBox(width: 140, child: Text(bar.label)),
+                    Expanded(
+                      child: LinearProgressIndicator(
+                        value: _bars.first.amount == 0
+                            ? 0
+                            : bar.amount / _bars.first.amount,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text('${bar.amount} ₽'),
+                  ],
+                ),
+              ),
           ],
         ],
       ),

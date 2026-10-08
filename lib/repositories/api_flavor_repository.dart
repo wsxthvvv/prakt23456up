@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 
+import '../core/pb_links.dart';
 import '../models/flavor.dart';
 import '../models/flavor_query.dart';
 import '../models/page_result.dart';
@@ -14,6 +15,10 @@ class ApiFlavorRepository implements FlavorRepository {
         decode: Flavor.fromJson,
         encode: _write,
         idOf: (item) => item.id,
+        hints: const PbHints(
+          searchFields: ['name', 'description'],
+          equals: {'intensity': 'intensity'},
+        ),
       );
 
   final RemoteCollection<Flavor> _remote;

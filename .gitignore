@@ -46,3 +46,8 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# PocketBase: программа и файл базы не коммитятся, схема лежит в pb_migrations
+/pocketbase/pocketbase.exe
+/pocketbase/pb_data/
+/pocketbase/*.zip

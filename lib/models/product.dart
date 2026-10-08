@@ -12,6 +12,7 @@ class Product {
   final List<int> flavorTagIds;
   final int stockTotal;
   final int stockAvailable;
+  final int priceRub;
   final DateTime? deletedAt;
 
   const Product({
@@ -26,6 +27,7 @@ class Product {
     required this.flavorTagIds,
     required this.stockTotal,
     required this.stockAvailable,
+    this.priceRub = 0,
     this.deletedAt,
   });
 
@@ -42,6 +44,7 @@ class Product {
     List<int>? flavorTagIds,
     int? stockTotal,
     int? stockAvailable,
+    int? priceRub,
     DateTime? deletedAt,
     bool clearDeletedAt = false,
   }) {
@@ -57,6 +60,7 @@ class Product {
       flavorTagIds: flavorTagIds ?? this.flavorTagIds,
       stockTotal: stockTotal ?? this.stockTotal,
       stockAvailable: stockAvailable ?? this.stockAvailable,
+      priceRub: priceRub ?? this.priceRub,
       deletedAt: clearDeletedAt ? null : (deletedAt ?? this.deletedAt),
     );
   }
@@ -73,6 +77,7 @@ class Product {
     'flavorTagIds': flavorTagIds,
     'stockTotal': stockTotal,
     'stockAvailable': stockAvailable,
+    'priceRub': priceRub,
     'deletedAt': deletedAt?.toIso8601String(),
   };
 
@@ -88,6 +93,7 @@ class Product {
     flavorTagIds: jsonRelationIds(json, 'flavorTagIds', 'flavors'),
     stockTotal: jsonInt(json['stockTotal']),
     stockAvailable: jsonInt(json['stockAvailable']),
+    priceRub: jsonInt(json['priceRub']),
     deletedAt: jsonDate(json['deletedAt']),
   );
 }

@@ -19,6 +19,12 @@ const _catalog = [
   _Dest('/', 'Главная', Icons.home_outlined, null),
   _Dest('/products', 'Каталог', Icons.cake_outlined, AppAction.viewCatalog),
   _Dest(
+    '/categories',
+    'Категории',
+    Icons.category_outlined,
+    AppAction.manageCatalog,
+  ),
+  _Dest(
     '/confectioners',
     'Кондитеры',
     Icons.badge_outlined,

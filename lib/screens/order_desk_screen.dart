@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../core/api_exceptions.dart';
+import '../repositories/order_gateway.dart';
 
 class OrderDeskScreen extends StatefulWidget {
   const OrderDeskScreen({super.key});
@@ -13,7 +14,7 @@ class OrderDeskScreen extends StatefulWidget {
 }
 
 class _OrderDeskScreenState extends State<OrderDeskScreen> {
-  List<Map<String, dynamic>> _items = [];
+  List<OrderView> _items = [];
   String? _error;
   bool _loading = true;
 
@@ -29,35 +30,28 @@ class _OrderDeskScreenState extends State<OrderDeskScreen> {
       _error = null;
     });
     try {
-      final response = await context.read<Dio>().get('/orders');
-      final data = response.data;
-      final items = data is Map && data['items'] is List
-          ? data['items'] as List
-          : const [];
+      final items = await OrderGateway(context.read<Dio>()).list();
       if (!mounted) return;
       setState(() {
-        _items = [
-          for (final item in items)
-            if (item is Map) Map<String, dynamic>.from(item),
-        ];
+        _items = items;
         _loading = false;
       });
-    } on DioException catch (error) {
+    } on ApiException catch (error) {
       if (!mounted) return;
       setState(() {
-        _error = '${mapDioError(error)}';
+        _error = error.message;
         _loading = false;
       });
     }
   }
 
-  Future<void> _close(int id) async {
+  Future<void> _close(int code) async {
     try {
-      await context.read<Dio>().post('/orders/$id/close');
+      await OrderGateway(context.read<Dio>()).close(code);
       await _load();
-    } on DioException catch (error) {
+    } on ApiException catch (error) {
       if (!mounted) return;
-      setState(() => _error = '${mapDioError(error)}');
+      setState(() => _error = error.message);
     }
   }
 
@@ -67,6 +61,11 @@ class _OrderDeskScreenState extends State<OrderDeskScreen> {
       appBar: AppBar(
         title: const Text('Оформление заказов'),
         actions: [
+          IconButton(
+            tooltip: 'Новый заказ',
+            onPressed: () => context.go('/orders/new'),
+            icon: const Icon(Icons.add),
+          ),
           IconButton(
             tooltip: 'На главную',
             onPressed: () => context.go('/'),
@@ -78,7 +77,7 @@ class _OrderDeskScreenState extends State<OrderDeskScreen> {
         padding: const EdgeInsets.all(16),
         children: [
           const Text(
-            'Этот экран есть только у продавца: здесь все заказы покупателей, их можно закрыть.',
+            'Этот экран есть только у продавца. Сумма заказа уже учитывает скидку карты.',
           ),
           const SizedBox(height: 16),
           if (_loading) const Center(child: CircularProgressIndicator()),
@@ -87,16 +86,21 @@ class _OrderDeskScreenState extends State<OrderDeskScreen> {
               _error!,
               style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
+          if (!_loading && _error == null && _items.isEmpty)
+            const Text('Заказов пока нет.'),
           for (final item in _items)
             ListTile(
-              title: Text('${item['productName']}'),
-              subtitle: Text(
-                'Покупатель ${item['userId']} · ${item['qty']} шт. · ${item['status'] == 'closed' ? 'закрыт' : 'открыт'}',
+              title: Text(
+                '${item.customerName} · ${item.dueOn} · ${item.totalRub} ₽',
               ),
-              trailing: item['status'] == 'closed'
+              subtitle: Text(
+                '${item.lines.map((line) => '${line.productName} × ${line.qty}').join(', ')}'
+                '${item.status == 'closed' ? ' · закрыт' : ' · открыт'}',
+              ),
+              trailing: item.status == 'closed'
                   ? null
                   : FilledButton(
-                      onPressed: () => _close(item['id'] as int),
+                      onPressed: () => _close(item.code),
                       child: const Text('Закрыть'),
                     ),
             ),

@@ -66,27 +66,31 @@ void main() {
         return _json(200, {
           'items': [
             {
-              'id': 20,
+              'id': 'rec20',
+              'code': 20,
               'name': 'Торт «Прага»',
               'sku': 'NYM-020',
               'year': 2019,
               'weightGrams': 1000,
-              'category': {'id': 1, 'name': 'Торты'},
-              'workshop': {'id': 1, 'name': 'Цех тортов'},
-              'confectioners': [
-                {'id': 1, 'fullName': 'Иванова Мария'},
-              ],
-              'flavors': [
-                {'id': 1, 'name': 'Шоколад'},
-              ],
               'stockTotal': 22,
               'stockAvailable': 9,
-              'deletedAt': null,
+              'deleted': false,
+              'expand': {
+                'category': {'id': 'cat1', 'code': 1, 'name': 'Торты'},
+                'workshop': {'id': 'ws1', 'code': 1, 'name': 'Цех тортов'},
+                'confectioners': [
+                  {'id': 'cf1', 'code': 1},
+                ],
+                'flavors': [
+                  {'id': 'fl1', 'code': 1, 'name': 'Шоколад'},
+                ],
+              },
             },
           ],
           'page': 2,
-          'size': 10,
-          'total': 30,
+          'perPage': 10,
+          'totalItems': 30,
+          'totalPages': 3,
         });
       }),
     );
@@ -100,26 +104,34 @@ void main() {
     expect(page.items.single.workshopId, 1);
     expect(page.items.single.confectionerIds, [1]);
     expect(page.items.single.flavorTagIds, [1]);
-    expect(seen?.queryParameters['search'], 'прага');
     expect(seen?.queryParameters['page'], 2);
-    expect(seen?.path, '/products');
+    expect('${seen?.queryParameters['filter']}', contains('прага'));
+    expect(seen?.path, '/collections/products/records');
   });
 
   test('create returns the product assigned by the server', () async {
     final repo = ApiProductRepository(
       _dio((options) async {
         return _json(201, {
-          'id': 31,
+          'id': 'rec31',
+          'code': 31,
           'name': 'Прага',
           'sku': 'NYM-031',
           'year': 2019,
           'weightGrams': 1000,
-          'categoryId': 1,
-          'workshopId': 1,
-          'confectionerIds': [1],
-          'flavorTagIds': [1],
           'stockTotal': 22,
           'stockAvailable': 9,
+          'deleted': false,
+          'expand': {
+            'category': {'id': 'cat1', 'code': 1},
+            'workshop': {'id': 'ws1', 'code': 1},
+            'confectioners': [
+              {'id': 'cf1', 'code': 1},
+            ],
+            'flavors': [
+              {'id': 'fl1', 'code': 1},
+            ],
+          },
         });
       }),
     );

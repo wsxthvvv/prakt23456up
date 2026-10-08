@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 
+import '../core/pb_links.dart';
 import '../models/page_result.dart';
 import '../models/product.dart';
 import '../models/product_query.dart';
@@ -14,6 +15,25 @@ class ApiProductRepository implements ProductRepository {
         decode: Product.fromJson,
         encode: _write,
         idOf: (item) => item.id,
+        hints: const PbHints(
+          searchFields: ['name', 'sku'],
+          relations: {
+            'flavorTagId': PbRelation('flavors', 'flavors', many: true),
+            'categoryId': PbRelation('categories', 'category'),
+          },
+          minimum: {'yearFrom': 'year'},
+          maximum: {'yearTo': 'year'},
+        ),
+        relations: const {
+          'categoryId': PbRelation('categories', 'category'),
+          'workshopId': PbRelation('workshops', 'workshop'),
+          'confectionerIds': PbRelation(
+            'confectioners',
+            'confectioners',
+            many: true,
+          ),
+          'flavorTagIds': PbRelation('flavors', 'flavors', many: true),
+        },
       );
 
   final RemoteCollection<Product> _remote;
@@ -81,4 +101,5 @@ Map<String, dynamic> _write(Product product) => {
   'flavorTagIds': product.flavorTagIds,
   'stockTotal': product.stockTotal,
   'stockAvailable': product.stockAvailable,
+  'priceRub': product.priceRub,
 };

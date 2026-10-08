@@ -2,51 +2,65 @@ import 'package:dio/dio.dart';
 
 import '../core/api_exceptions.dart';
 import '../core/json_values.dart';
+import '../core/pb_links.dart';
+import '../data/seed_data.dart';
 import '../models/product_category.dart';
 import 'reference_repository.dart';
 
 class ApiReferenceRepository implements ReferenceRepository {
-  ApiReferenceRepository(this._dio);
+  ApiReferenceRepository(this._dio, {PbLinks? links})
+    : _links = links ?? PbLinks.shared;
 
   final Dio _dio;
+  final PbLinks _links;
   bool _loaded = false;
   List<ProductCategory> _categories = const [];
-  List<String> _countries = const [];
-  List<String> _specialties = const [];
 
   Future<void> warm() async {
     if (_loaded) return;
-    final categories = await _items('/categories');
-    final countries = await _items('/countries');
-    final specialties = await _items('/specialties');
-    _categories = [
-      for (final item in categories)
-        if (item is Map)
-          ProductCategory.fromJson(Map<String, dynamic>.from(item)),
-    ];
-    _countries = [for (final item in countries) jsonString(item)];
-    _specialties = [for (final item in specialties) jsonString(item)];
-    _loaded = true;
-  }
-
-  Future<List<dynamic>> _items(String path) => guard(() async {
-    final response = await _dio.get(
-      path,
-      queryParameters: {'page': 1, 'size': 100},
+    final response = await guard(
+      () => _dio.get(
+        '/collections/categories/records',
+        queryParameters: {
+          'page': 1,
+          'perPage': 100,
+          'sort': 'code',
+          'filter': 'deleted = false',
+        },
+      ),
     );
     final data = response.data;
-    if (data is Map && data['items'] is List) return data['items'] as List;
-    throw const ServerException('Сервер вернул неожиданный ответ.');
-  });
+    final items = data is Map && data['items'] is List
+        ? data['items'] as List
+        : const [];
+    _categories = [
+      for (final item in items)
+        if (item is Map)
+          ProductCategory(
+            id: jsonInt(item['code']),
+            name: jsonString(item['name']),
+          ),
+    ];
+    for (final item in items) {
+      if (item is Map) {
+        _links.remember(
+          'categories',
+          jsonInt(item['code']),
+          jsonString(item['id']),
+        );
+      }
+    }
+    _loaded = true;
+  }
 
   @override
   List<ProductCategory> get categories => List.unmodifiable(_categories);
 
   @override
-  List<String> get countries => List.unmodifiable(_countries);
+  List<String> get countries => seedCountries;
 
   @override
-  List<String> get specialties => List.unmodifiable(_specialties);
+  List<String> get specialties => seedSpecialties;
 
   @override
   String categoryName(int id) {

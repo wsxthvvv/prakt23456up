@@ -10,6 +10,7 @@ import '../models/flavor.dart';
 import '../models/flavor_query.dart';
 import '../models/workshop.dart';
 import '../models/workshop_query.dart';
+import '../screens/category_screen.dart';
 import '../screens/confectioner_detail_screen.dart';
 import '../screens/confectioner_form_screen.dart';
 import '../screens/confectioner_list_screen.dart';
@@ -25,6 +26,7 @@ import '../screens/login_screen.dart';
 import '../screens/my_orders_screen.dart';
 import '../screens/not_found_screen.dart';
 import '../screens/order_desk_screen.dart';
+import '../screens/order_form_screen.dart';
 import '../screens/register_screen.dart';
 import '../screens/stats_screen.dart' deferred as stats_screen;
 import '../screens/users_screen.dart' deferred as users_screen;
@@ -82,6 +84,11 @@ GoRouter buildRouter(
       if (target.startsWith('/admin')) {
         return allowsAction(role, AppAction.manageUsers) ? null : '/forbidden';
       }
+      if (target.startsWith('/categories')) {
+        return allowsAction(role, AppAction.manageCatalog)
+            ? null
+            : '/forbidden';
+      }
       if (target.startsWith('/customers')) {
         return allowsAction(role, AppAction.manageCustomers)
             ? null
@@ -112,12 +119,32 @@ GoRouter buildRouter(
           ),
           GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
           GoRoute(
+            path: '/categories',
+            builder: (context, state) => const CategoryScreen(),
+          ),
+          GoRoute(
             path: '/my-orders',
             builder: (context, state) => const MyOrdersScreen(),
+            routes: [
+              GoRoute(
+                path: 'new',
+                builder: (context, state) => OrderFormScreen(
+                  lockedCustomerId: int.tryParse(
+                    state.uri.queryParameters['customer'] ?? '',
+                  ),
+                ),
+              ),
+            ],
           ),
           GoRoute(
             path: '/orders',
             builder: (context, state) => const OrderDeskScreen(),
+            routes: [
+              GoRoute(
+                path: 'new',
+                builder: (context, state) => const OrderFormScreen(),
+              ),
+            ],
           ),
           GoRoute(
             path: '/admin/users',

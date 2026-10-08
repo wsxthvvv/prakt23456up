@@ -28,6 +28,7 @@ class _WorkshopFormScreenState extends State<WorkshopFormScreen> {
   final _name = TextEditingController();
   final _city = TextEditingController();
   final _phone = TextEditingController();
+  final _capacity = TextEditingController();
   List<int> _flavorIds = [];
   String _initial = '';
   bool _ready = false;
@@ -47,6 +48,7 @@ class _WorkshopFormScreenState extends State<WorkshopFormScreen> {
     _name.dispose();
     _city.dispose();
     _phone.dispose();
+    _capacity.dispose();
     super.dispose();
   }
 
@@ -63,13 +65,14 @@ class _WorkshopFormScreenState extends State<WorkshopFormScreen> {
     _name.text = item?.name ?? '';
     _city.text = item?.city ?? '';
     _phone.text = item?.phone ?? '';
+    _capacity.text = item == null ? '' : '${item.dailyCapacityKg}';
     _flavorIds = [...?item?.flavorIds];
     _initial = _snapshot();
     setState(() => _ready = true);
   }
 
   String _snapshot() =>
-      '${_name.text}|${_city.text}|${_phone.text}|${_flavorIds.join(',')}';
+      '${_name.text}|${_city.text}|${_phone.text}|${_capacity.text}|${_flavorIds.join(',')}';
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
@@ -78,6 +81,7 @@ class _WorkshopFormScreenState extends State<WorkshopFormScreen> {
       name: _name.text.trim(),
       city: _city.text.trim(),
       phone: _phone.text.trim(),
+      dailyCapacityKg: int.parse(_capacity.text.trim()),
       flavorIds: _flavorIds,
     );
     setState(() => _saving = true);
@@ -147,6 +151,16 @@ class _WorkshopFormScreenState extends State<WorkshopFormScreen> {
         keyboardType: TextInputType.phone,
         onChanged: (_) => setState(() {}),
         validator: V.combine([V.required('Укажите телефон'), V.phone()]),
+      ),
+      TextFieldSpec(
+        label: 'Мощность, кг в сутки',
+        controller: _capacity,
+        keyboardType: TextInputType.number,
+        onChanged: (_) => setState(() {}),
+        validator: V.combine([
+          V.required('Укажите мощность цеха'),
+          V.integer(min: 1, max: 10000),
+        ]),
       ),
     ];
     return FormScaffold(

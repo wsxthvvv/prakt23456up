@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 
+import '../core/pb_links.dart';
 import '../models/confectioner.dart';
 import '../models/confectioner_query.dart';
 import '../models/page_result.dart';
@@ -14,6 +15,13 @@ class ApiConfectionerRepository implements ConfectionerRepository {
         decode: Confectioner.fromJson,
         encode: _write,
         idOf: (item) => item.id,
+        hints: const PbHints(
+          searchFields: ['lastName', 'firstName', 'specialty'],
+          equals: {'country': 'country', 'specialty': 'specialty'},
+        ),
+        relations: const {
+          'workshopId': PbRelation('workshops', 'workshop'),
+        },
       );
 
   final RemoteCollection<Confectioner> _remote;

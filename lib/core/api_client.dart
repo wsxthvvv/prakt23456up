@@ -39,9 +39,13 @@ Dio buildDio({
       onResponse: (response, handler) async {
         final status = response.statusCode ?? 0;
         final path = response.requestOptions.path;
+        final authCall =
+            path.contains('/auth/') ||
+            path.contains('auth-with-password') ||
+            path.contains('auth-refresh');
         if (status == 401 &&
             refresh != null &&
-            !path.contains('/auth/') &&
+            !authCall &&
             response.requestOptions.extra['authRetry'] != true) {
           final ok = await refresh();
           if (ok) {

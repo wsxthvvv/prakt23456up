@@ -77,7 +77,7 @@ class _LoginScreenState extends State<LoginScreen> {
               TextField(
                 controller: _username,
                 decoration: InputDecoration(
-                  labelText: 'Логин',
+                  labelText: 'Почта',
                   errorText: _usernameError,
                 ),
                 textInputAction: TextInputAction.next,

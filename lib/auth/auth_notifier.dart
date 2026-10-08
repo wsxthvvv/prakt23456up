@@ -81,7 +81,7 @@ class AuthNotifier extends ChangeNotifier {
     _sessionStartedMs = started;
     _lastActivityMs = activity ?? now;
     try {
-      await _dio!.get('/auth/me');
+      await _dio!.post('/collections/users/auth-refresh');
     } on DioException catch (error) {
       final mapped = mapDioError(error);
       if (mapped is UnauthorizedException) {
@@ -99,8 +99,8 @@ class AuthNotifier extends ChangeNotifier {
   Future<void> login(String username, String password) {
     return _open(
       () => _dio!.post(
-        '/auth/login',
-        data: {'username': username.trim(), 'password': password},
+        '/collections/users/auth-with-password',
+        data: {'identity': username.trim(), 'password': password},
       ),
     );
   }
@@ -113,16 +113,18 @@ class AuthNotifier extends ChangeNotifier {
   }) async {
     await guard(
       () => _dio!.post(
-        '/auth/register',
+        '/collections/users/records',
         data: {
           'username': username.trim(),
           'password': password,
+          'passwordConfirm': password,
           'email': email.trim(),
           'fullName': fullName.trim(),
+          'role': 'buyer',
         },
       ),
     );
-    await login(username, password);
+    await login(email, password);
   }
 
   Future<bool> refreshTokens() {
@@ -155,7 +157,6 @@ class AuthNotifier extends ChangeNotifier {
   }
 
   Future<void> logout({SessionEnd? reason, bool remote = true}) async {
-    final refresh = _refreshToken ?? _prefs.getString(_kRefresh);
     _absolute?.cancel();
     _user = null;
     _accessToken = null;
@@ -169,11 +170,35 @@ class AuthNotifier extends ChangeNotifier {
     await _prefs.remove(_kStarted);
     await _prefs.remove(_kActivity);
     notifyListeners();
-    if (remote && refresh != null && refresh.isNotEmpty && _dio != null) {
-      try {
-        await _dio!.post('/auth/logout', data: {'refreshToken': refresh});
-      } catch (_) {}
+  }
+
+  ({String accessToken, String? refreshToken, Map<String, dynamic> user})?
+  _sessionFrom(dynamic data) {
+    if (data is! Map) return null;
+    if (data['token'] is String && data['record'] is Map) {
+      final record = Map<String, dynamic>.from(data['record'] as Map);
+      final code = record['code'];
+      return (
+        accessToken: data['token'] as String,
+        refreshToken: data['token'] as String,
+        user: {
+          'id': code is num ? code.toInt() : 0,
+          'pbId': '${record['id'] ?? ''}',
+          'username': '${record['email'] ?? record['username'] ?? ''}',
+          'fullName': '${record['fullName'] ?? ''}',
+          'email': '${record['email'] ?? ''}',
+          'role': record['role'],
+        },
+      );
     }
+    if (data['accessToken'] is String && data['user'] is Map) {
+      return (
+        accessToken: data['accessToken'] as String,
+        refreshToken: data['refreshToken'] as String?,
+        user: Map<String, dynamic>.from(data['user'] as Map),
+      );
+    }
+    return null;
   }
 
   Future<void> _open(Future<Response<dynamic>> Function() request) async {
@@ -182,17 +207,14 @@ class AuthNotifier extends ChangeNotifier {
   }
 
   Future<void> _accept(dynamic data) async {
-    if (data is! Map ||
-        data['accessToken'] is! String ||
-        data['user'] is! Map) {
+    final session = _sessionFrom(data);
+    if (session == null) {
       throw const ServerException('Сервер не выдал токен доступа.');
     }
-    final user = AppUser.fromJson(
-      Map<String, dynamic>.from(data['user'] as Map),
-    );
+    final user = AppUser.fromJson(session.user);
     if (user == null) throw const ServerException('Сервер не сообщил роль.');
-    _accessToken = data['accessToken'] as String;
-    _refreshToken = data['refreshToken'] as String?;
+    _accessToken = session.accessToken;
+    _refreshToken = session.refreshToken;
     _user = user;
     final now = DateTime.now().millisecondsSinceEpoch;
     _sessionStartedMs = now;
@@ -214,12 +236,12 @@ class AuthNotifier extends ChangeNotifier {
     if (refresh == null || refresh.isEmpty || _dio == null) return false;
     try {
       final response = await guard(
-        () => _dio!.post('/auth/refresh', data: {'refreshToken': refresh}),
+        () => _dio!.post('/collections/users/auth-refresh'),
       );
-      final data = response.data;
-      if (data is! Map || data['accessToken'] is! String) return false;
-      _accessToken = data['accessToken'] as String;
-      _refreshToken = data['refreshToken'] as String?;
+      final session = _sessionFrom(response.data);
+      if (session == null) return false;
+      _accessToken = session.accessToken;
+      _refreshToken = session.refreshToken;
       await _prefs.setString(_kAccess, _accessToken!);
       if (_refreshToken != null) {
         await _prefs.setString(_kRefresh, _refreshToken!);

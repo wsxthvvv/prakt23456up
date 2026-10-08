@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 
+import '../core/pb_links.dart';
 import '../models/page_result.dart';
 import '../models/workshop.dart';
 import '../models/workshop_query.dart';
@@ -14,6 +15,13 @@ class ApiWorkshopRepository implements WorkshopRepository {
         decode: Workshop.fromJson,
         encode: _write,
         idOf: (item) => item.id,
+        hints: const PbHints(
+          searchFields: ['name', 'city'],
+          equals: {'city': 'city'},
+        ),
+        relations: const {
+          'flavorIds': PbRelation('flavors', 'flavors', many: true),
+        },
       );
 
   final RemoteCollection<Workshop> _remote;
@@ -61,5 +69,6 @@ Map<String, dynamic> _write(Workshop item) => {
   'name': item.name,
   'city': item.city,
   'phone': item.phone,
+  'dailyCapacityKg': item.dailyCapacityKg,
   'flavorIds': item.flavorIds,
 };
