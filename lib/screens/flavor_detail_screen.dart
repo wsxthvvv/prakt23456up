@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../auth/access_policy.dart';
+import '../auth/auth_notifier.dart';
 import '../models/flavor.dart';
+import '../widgets/api_feedback.dart';
 import '../models/flavor_query.dart';
 import '../repositories/flavor_repository.dart';
 import '../routing/query_codec.dart';
@@ -43,17 +46,20 @@ class FlavorDetailScreen extends StatelessWidget {
                     spacing: 8,
                     runSpacing: 8,
                     children: [
-                      FilledButton(onPressed: () => context.push('/flavors/${item.id}/edit'), child: const Text('Изменить')),
+                      if (context.watch<AuthNotifier>().allows(AppAction.manageCatalog))
+                        FilledButton(onPressed: () => context.push('/flavors/${item.id}/edit'), child: const Text('Изменить')),
                       FilledButton(onPressed: () => context.go('/flavors'), child: const Text('К списку')),
-                      if (item.isDeleted)
+                      if (item.isDeleted && context.watch<AuthNotifier>().allows(AppAction.restore))
                         FilledButton.tonal(onPressed: () => _restore(context, item.id), child: const Text('Восстановить'))
-                      else ...[
-                        FilledButton.tonal(onPressed: () => _soft(context, item.id), child: const Text('Скрыть')),
-                        FilledButton(
-                          style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
-                          onPressed: () => _hard(context, item.id),
-                          child: const Text('Удалить навсегда'),
-                        ),
+                      else if (!item.isDeleted) ...[
+                        if (context.watch<AuthNotifier>().allows(AppAction.manageCatalog))
+                          FilledButton.tonal(onPressed: () => _soft(context, item.id), child: const Text('Скрыть')),
+                        if (context.watch<AuthNotifier>().allows(AppAction.hardDelete))
+                          FilledButton(
+                            style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
+                            onPressed: () => _hard(context, item.id),
+                            child: const Text('Удалить навсегда'),
+                          ),
                       ],
                     ],
                   ),
@@ -68,19 +74,25 @@ class FlavorDetailScreen extends StatelessWidget {
 
   Future<void> _soft(BuildContext context, int id) async {
     final notifier = context.read<CatalogNotifier<Flavor, FlavorQuery>>();
-    await notifier.softDeleteOne(id);
-    if (context.mounted) context.go(flavorQueryToLocation(notifier.query));
+    await showFailure(context, () async {
+      await notifier.softDeleteOne(id);
+      if (context.mounted) context.go(flavorQueryToLocation(notifier.query));
+    });
   }
 
   Future<void> _hard(BuildContext context, int id) async {
     final notifier = context.read<CatalogNotifier<Flavor, FlavorQuery>>();
-    await notifier.hardDeleteOne(id);
-    if (context.mounted) context.go('/flavors');
+    await showFailure(context, () async {
+      await notifier.hardDeleteOne(id);
+      if (context.mounted) context.go('/flavors');
+    });
   }
 
   Future<void> _restore(BuildContext context, int id) async {
     final notifier = context.read<CatalogNotifier<Flavor, FlavorQuery>>();
-    await notifier.restoreOne(id);
-    if (context.mounted) context.go(flavorQueryToLocation(notifier.query));
+    await showFailure(context, () async {
+      await notifier.restoreOne(id);
+      if (context.mounted) context.go(flavorQueryToLocation(notifier.query));
+    });
   }
 }

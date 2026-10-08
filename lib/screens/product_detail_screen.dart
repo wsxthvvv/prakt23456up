@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../auth/access_policy.dart';
+import '../auth/auth_notifier.dart';
 import '../models/product.dart';
+import '../widgets/api_feedback.dart';
 import '../repositories/confectioner_repository.dart';
 import '../repositories/flavor_repository.dart';
 import '../repositories/product_repository.dart';
@@ -93,28 +96,31 @@ class ProductDetailScreen extends StatelessWidget {
                     spacing: 8,
                     runSpacing: 8,
                     children: [
-                      FilledButton(
-                        onPressed: () => context.push('/products/${product.id}/edit'),
-                        child: const Text('Изменить'),
-                      ),
+                      if (context.watch<AuthNotifier>().allows(AppAction.manageCatalog))
+                        FilledButton(
+                          onPressed: () => context.push('/products/${product.id}/edit'),
+                          child: const Text('Изменить'),
+                        ),
                       FilledButton(onPressed: () => context.go('/products'), child: const Text('К каталогу')),
-                      if (product.isDeleted)
+                      if (product.isDeleted && context.watch<AuthNotifier>().allows(AppAction.restore))
                         FilledButton.tonal(
                           onPressed: () => _restore(context, product.id),
                           child: const Text('Восстановить'),
                         )
-                      else ...[
-                        FilledButton.tonal(
-                          onPressed: () => _softDelete(context, product.id),
-                          child: const Text('Скрыть (логически)'),
-                        ),
-                        FilledButton(
-                          style: FilledButton.styleFrom(
-                            backgroundColor: Theme.of(context).colorScheme.error,
+                      else if (!product.isDeleted) ...[
+                        if (context.watch<AuthNotifier>().allows(AppAction.manageCatalog))
+                          FilledButton.tonal(
+                            onPressed: () => _softDelete(context, product.id),
+                            child: const Text('Скрыть (логически)'),
                           ),
-                          onPressed: () => _hardDelete(context, product.id),
-                          child: const Text('Удалить навсегда'),
-                        ),
+                        if (context.watch<AuthNotifier>().allows(AppAction.hardDelete))
+                          FilledButton(
+                            style: FilledButton.styleFrom(
+                              backgroundColor: Theme.of(context).colorScheme.error,
+                            ),
+                            onPressed: () => _hardDelete(context, product.id),
+                            child: const Text('Удалить навсегда'),
+                          ),
                       ],
                     ],
                   ),
@@ -129,20 +135,26 @@ class ProductDetailScreen extends StatelessWidget {
 
   Future<void> _softDelete(BuildContext context, int id) async {
     final notifier = context.read<ProductListNotifier>();
-    await notifier.softDeleteOne(id);
-    if (context.mounted) context.go(productQueryToLocation(notifier.query));
+    await showFailure(context, () async {
+      await notifier.softDeleteOne(id);
+      if (context.mounted) context.go(productQueryToLocation(notifier.query));
+    });
   }
 
   Future<void> _hardDelete(BuildContext context, int id) async {
     final notifier = context.read<ProductListNotifier>();
-    await notifier.hardDeleteOne(id);
-    if (context.mounted) context.go('/products');
+    await showFailure(context, () async {
+      await notifier.hardDeleteOne(id);
+      if (context.mounted) context.go('/products');
+    });
   }
 
   Future<void> _restore(BuildContext context, int id) async {
     final notifier = context.read<ProductListNotifier>();
-    await notifier.restoreOne(id);
-    if (context.mounted) context.go(productQueryToLocation(notifier.query));
+    await showFailure(context, () async {
+      await notifier.restoreOne(id);
+      if (context.mounted) context.go(productQueryToLocation(notifier.query));
+    });
   }
 
   Widget _row(String label, String value) {

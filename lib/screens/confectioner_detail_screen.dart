@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../auth/access_policy.dart';
+import '../auth/auth_notifier.dart';
 import '../models/confectioner.dart';
+import '../widgets/api_feedback.dart';
 import '../repositories/confectioner_repository.dart';
 import '../repositories/workshop_repository.dart';
 import '../routing/query_codec.dart';
@@ -48,28 +51,31 @@ class ConfectionerDetailScreen extends StatelessWidget {
                   Wrap(
                     spacing: 8,
                     children: [
-                      FilledButton(
-                        onPressed: () => context.push('/confectioners/${c.id}/edit'),
-                        child: const Text('Изменить'),
-                      ),
+                      if (context.watch<AuthNotifier>().allows(AppAction.manageCatalog))
+                        FilledButton(
+                          onPressed: () => context.push('/confectioners/${c.id}/edit'),
+                          child: const Text('Изменить'),
+                        ),
                       FilledButton(onPressed: () => context.go('/confectioners'), child: const Text('К списку')),
-                      if (c.isDeleted)
+                      if (c.isDeleted && context.watch<AuthNotifier>().allows(AppAction.restore))
                         FilledButton.tonal(
                           onPressed: () => _restore(context, c.id),
                           child: const Text('Восстановить'),
                         )
-                      else ...[
-                        FilledButton.tonal(
-                          onPressed: () => _softDelete(context, c.id),
-                          child: const Text('Скрыть'),
-                        ),
-                        FilledButton(
-                          style: FilledButton.styleFrom(
-                            backgroundColor: Theme.of(context).colorScheme.error,
+                      else if (!c.isDeleted) ...[
+                        if (context.watch<AuthNotifier>().allows(AppAction.manageCatalog))
+                          FilledButton.tonal(
+                            onPressed: () => _softDelete(context, c.id),
+                            child: const Text('Скрыть'),
                           ),
-                          onPressed: () => _hardDelete(context, c.id),
-                          child: const Text('Удалить навсегда'),
-                        ),
+                        if (context.watch<AuthNotifier>().allows(AppAction.hardDelete))
+                          FilledButton(
+                            style: FilledButton.styleFrom(
+                              backgroundColor: Theme.of(context).colorScheme.error,
+                            ),
+                            onPressed: () => _hardDelete(context, c.id),
+                            child: const Text('Удалить навсегда'),
+                          ),
                       ],
                     ],
                   ),
@@ -91,19 +97,25 @@ class ConfectionerDetailScreen extends StatelessWidget {
 
   Future<void> _softDelete(BuildContext context, int id) async {
     final notifier = context.read<ConfectionerListNotifier>();
-    await notifier.softDeleteOne(id);
-    if (context.mounted) context.go(confectionerQueryToLocation(notifier.query));
+    await showFailure(context, () async {
+      await notifier.softDeleteOne(id);
+      if (context.mounted) context.go(confectionerQueryToLocation(notifier.query));
+    });
   }
 
   Future<void> _hardDelete(BuildContext context, int id) async {
     final notifier = context.read<ConfectionerListNotifier>();
-    await notifier.hardDeleteOne(id);
-    if (context.mounted) context.go('/confectioners');
+    await showFailure(context, () async {
+      await notifier.hardDeleteOne(id);
+      if (context.mounted) context.go('/confectioners');
+    });
   }
 
   Future<void> _restore(BuildContext context, int id) async {
     final notifier = context.read<ConfectionerListNotifier>();
-    await notifier.restoreOne(id);
-    if (context.mounted) context.go(confectionerQueryToLocation(notifier.query));
+    await showFailure(context, () async {
+      await notifier.restoreOne(id);
+      if (context.mounted) context.go(confectionerQueryToLocation(notifier.query));
+    });
   }
 }

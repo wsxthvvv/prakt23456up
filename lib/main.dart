@@ -1,8 +1,11 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import 'auth/auth_notifier.dart';
+import 'auth/inactivity_watcher.dart';
 import 'core/api_client.dart';
 import 'core/app_theme.dart';
 import 'models/customer.dart';
@@ -33,10 +36,16 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   usePathUrlStrategy();
   final storage = await AppStorage.open();
-  final session = ApiSession();
-  final dio = buildDio(tokenProvider: () => session.accessToken);
+  final auth = AuthNotifier(storage.prefs);
+  final navigatorKey = GlobalKey<NavigatorState>();
+  final dio = buildDio(
+    tokenProvider: () => auth.accessToken,
+    refresh: auth.refreshTokens,
+    onSessionLost: () => auth.logout(reason: SessionEnd.refresh, remote: false),
+  );
+  auth.bind(dio);
   try {
-    await session.login(dio).timeout(const Duration(seconds: 4));
+    await auth.restore().timeout(const Duration(seconds: 4));
   } catch (_) {}
   final products = ApiProductRepository(dio);
   final confectioners = ApiConfectionerRepository(dio);
@@ -58,8 +67,8 @@ Future<void> main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider<AppStorage>.value(value: storage),
+        ChangeNotifierProvider<AuthNotifier>.value(value: auth),
         Provider<Dio>.value(value: dio),
-        Provider<ApiSession>.value(value: session),
         Provider<ProductRepository>.value(value: products),
         Provider<ConfectionerRepository>.value(value: confectioners),
         Provider<FlavorRepository>.value(value: flavors),
@@ -112,21 +121,37 @@ Future<void> main() async {
           },
         ),
       ],
-      child: const NyamkaApp(),
+      child: NyamkaApp(router: buildRouter(auth, navigatorKey: navigatorKey), navigatorKey: navigatorKey),
     ),
   );
 }
 
 class NyamkaApp extends StatelessWidget {
-  const NyamkaApp({super.key});
+  const NyamkaApp({super.key, required this.router, required this.navigatorKey});
+
+  final GoRouter router;
+  final GlobalKey<NavigatorState> navigatorKey;
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthNotifier>();
     return MaterialApp.router(
       title: 'Кондитерская «нямка»',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
-      routerConfig: appRouter,
+      routerConfig: router,
+      builder: (context, child) {
+        return InactivityWatcher(
+          enabled: auth.isAuthenticated,
+          timeout: inactivityLimit,
+          initialTimeout: auth.inactivityLeft,
+          warning: inactivityWarning,
+          navigatorKey: navigatorKey,
+          onActivity: auth.markActivity,
+          onTimeout: () => auth.logout(reason: SessionEnd.inactive),
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
     );
   }
 }

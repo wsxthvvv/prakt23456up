@@ -24,6 +24,7 @@ class CatalogFrame extends StatelessWidget {
     super.key,
     required this.title,
     required this.onCreate,
+    this.canCreate = true,
     required this.selectedCount,
     required this.onDeleteSelected,
     required this.filtersExpanded,
@@ -39,6 +40,7 @@ class CatalogFrame extends StatelessWidget {
 
   final String title;
   final VoidCallback onCreate;
+  final bool canCreate;
   final int selectedCount;
   final VoidCallback? onDeleteSelected;
   final bool filtersExpanded;
@@ -57,13 +59,13 @@ class CatalogFrame extends StatelessWidget {
       appBar: AppBar(
         title: Text(title),
         actions: [
-          if (selectedCount > 0)
+          if (canCreate && selectedCount > 0)
             TextButton.icon(
               onPressed: onDeleteSelected,
               icon: const Icon(Icons.delete_outline),
               label: Text('Удалить ($selectedCount)'),
             ),
-          IconButton(tooltip: 'Добавить', onPressed: onCreate, icon: const Icon(Icons.add)),
+          if (canCreate) IconButton(tooltip: 'Добавить', onPressed: onCreate, icon: const Icon(Icons.add)),
           IconButton(tooltip: 'На главную', onPressed: () => context.go('/'), icon: const Icon(Icons.home)),
         ],
       ),

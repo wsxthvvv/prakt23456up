@@ -7,6 +7,9 @@ import '../models/flavor.dart';
 import '../models/flavor_query.dart';
 import '../routing/query_codec.dart';
 import '../state/catalog_notifier.dart';
+import '../auth/access_policy.dart';
+import '../auth/auth_notifier.dart';
+import '../widgets/api_feedback.dart';
 import '../widgets/catalog_frame.dart';
 import '../widgets/debounced_search_field.dart';
 import '../widgets/entity_table.dart';
@@ -41,8 +44,12 @@ class _FlavorListScreenState extends State<FlavorListScreen> {
     final notifier = context.watch<CatalogNotifier<Flavor, FlavorQuery>>();
     final q = notifier.query;
     final compact = isCompactWidth(context);
+    final manage = context.watch<AuthNotifier>().allows(AppAction.manageCatalog);
+    final restore = context.watch<AuthNotifier>().allows(AppAction.restore);
+    final hard = context.watch<AuthNotifier>().allows(AppAction.hardDelete);
     return CatalogFrame(
       title: 'Вкусы',
+      canCreate: manage,
       onCreate: () => context.push('/flavors/new'),
       selectedCount: notifier.selected.length,
       onDeleteSelected: () => _deleteSelected(notifier),
@@ -95,7 +102,10 @@ class _FlavorListScreenState extends State<FlavorListScreen> {
                     ),
                     title: Text(item.name),
                     subtitle: Text('Интенсивность ${item.intensity}'),
-                    trailing: Row(mainAxisSize: MainAxisSize.min, children: _actions(notifier, item)),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: _actions(notifier, item, manage: manage, restore: restore, hard: hard),
+                    ),
                     onTap: () => context.push('/flavors/${item.id}'),
                   ),
                 );
@@ -121,28 +131,38 @@ class _FlavorListScreenState extends State<FlavorListScreen> {
                 ),
                 TableColumnSpec(label: 'Описание', sortField: 'description', build: (item) => Text(item.description)),
               ],
-              actions: (item) => _actions(notifier, item),
+              actions: (item) => _actions(notifier, item, manage: manage, restore: restore, hard: hard),
             ),
     );
   }
 
-  List<Widget> _actions(CatalogNotifier<Flavor, FlavorQuery> notifier, Flavor item) {
+  List<Widget> _actions(
+    CatalogNotifier<Flavor, FlavorQuery> notifier,
+    Flavor item, {
+    required bool manage,
+    required bool restore,
+    required bool hard,
+  }) {
     return rowActions(
+      canEdit: manage,
+      canSoftDelete: manage,
+      canRestore: restore,
+      canHardDelete: hard,
       onOpen: () => context.push('/flavors/${item.id}'),
       onEdit: () => context.push('/flavors/${item.id}/edit'),
       deleted: item.isDeleted,
-      onRestore: () async {
+      onRestore: () => showFailure(context, () async {
         await notifier.restoreOne(item.id);
         _navigate(notifier.query);
-      },
-      onSoftDelete: () async {
+      }),
+      onSoftDelete: () => showFailure(context, () async {
         await notifier.softDeleteOne(item.id);
         _navigate(notifier.query);
-      },
-      onHardDelete: () async {
+      }),
+      onHardDelete: () => showFailure(context, () async {
         await notifier.hardDeleteOne(item.id);
         _navigate(notifier.query);
-      },
+      }),
     );
   }
 }

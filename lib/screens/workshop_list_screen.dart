@@ -8,7 +8,10 @@ import '../models/workshop_query.dart';
 import '../repositories/flavor_repository.dart';
 import '../repositories/workshop_repository.dart';
 import '../routing/query_codec.dart';
+import '../auth/access_policy.dart';
+import '../auth/auth_notifier.dart';
 import '../state/catalog_notifier.dart';
+import '../widgets/api_feedback.dart';
 import '../widgets/catalog_frame.dart';
 import '../widgets/debounced_search_field.dart';
 import '../widgets/entity_table.dart';
@@ -63,8 +66,12 @@ class _WorkshopListScreenState extends State<WorkshopListScreen> {
           .join(', ');
     }
 
+    final manage = context.watch<AuthNotifier>().allows(AppAction.manageCatalog);
+    final restore = context.watch<AuthNotifier>().allows(AppAction.restore);
+    final hard = context.watch<AuthNotifier>().allows(AppAction.hardDelete);
     return CatalogFrame(
       title: 'Цеха',
+      canCreate: manage,
       onCreate: () => context.push('/workshops/new'),
       selectedCount: notifier.selected.length,
       onDeleteSelected: () => _deleteSelected(notifier),
@@ -116,7 +123,10 @@ class _WorkshopListScreenState extends State<WorkshopListScreen> {
                     ),
                     title: Text(item.name),
                     subtitle: Text('${item.city} · ${item.phone}'),
-                    trailing: Row(mainAxisSize: MainAxisSize.min, children: _actions(notifier, item)),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: _actions(notifier, item, manage: manage, restore: restore, hard: hard),
+                    ),
                     onTap: () => context.push('/workshops/${item.id}'),
                   ),
                 );
@@ -138,20 +148,30 @@ class _WorkshopListScreenState extends State<WorkshopListScreen> {
                 TableColumnSpec(label: 'Телефон', sortField: 'phone', build: (item) => Text(item.phone)),
                 TableColumnSpec(label: 'Вкусы', build: (item) => Text(flavorLabel(item))),
               ],
-              actions: (item) => _actions(notifier, item),
+              actions: (item) => _actions(notifier, item, manage: manage, restore: restore, hard: hard),
             ),
     );
   }
 
-  List<Widget> _actions(CatalogNotifier<Workshop, WorkshopQuery> notifier, Workshop item) {
+  List<Widget> _actions(
+    CatalogNotifier<Workshop, WorkshopQuery> notifier,
+    Workshop item, {
+    required bool manage,
+    required bool restore,
+    required bool hard,
+  }) {
     return rowActions(
+      canEdit: manage,
+      canSoftDelete: manage,
+      canRestore: restore,
+      canHardDelete: hard,
       onOpen: () => context.push('/workshops/${item.id}'),
       onEdit: () => context.push('/workshops/${item.id}/edit'),
       deleted: item.isDeleted,
-      onRestore: () async {
+      onRestore: () => showFailure(context, () async {
         await notifier.restoreOne(item.id);
         _navigate(notifier.query);
-      },
+      }),
       onSoftDelete: () => _guarded(() => notifier.softDeleteOne(item.id), notifier),
       onHardDelete: () => _guarded(() => notifier.hardDeleteOne(item.id), notifier),
     );

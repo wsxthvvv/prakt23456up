@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../auth/access_policy.dart';
+import '../auth/auth_notifier.dart';
 import '../storage/app_storage.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -10,8 +12,23 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final notice = context.watch<AppStorage>().notice;
+    final auth = context.watch<AuthNotifier>();
+    final user = auth.user;
     return Scaffold(
-      appBar: AppBar(title: const Text('Кондитерская «нямка»')),
+      appBar: AppBar(
+        title: const Text('Кондитерская «нямка»'),
+        actions: [
+          if (user != null) ...[
+            Center(child: Text(user.fullName)),
+            const SizedBox(width: 8),
+            IconButton(
+              tooltip: 'Выйти',
+              onPressed: () => auth.logout(),
+              icon: const Icon(Icons.logout),
+            ),
+          ],
+        ],
+      ),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 460),
@@ -19,8 +36,10 @@ class HomeScreen extends StatelessWidget {
             padding: const EdgeInsets.all(24),
             children: [
               const SizedBox(height: 24),
-              const Text(
-                'Клиентская система витрины кондитерской. Каталог изделий, кондитеры, вкусы, цеха и покупатели с картами лояльности.',
+              Text(
+                user == null
+                    ? 'Клиентская система витрины кондитерской.'
+                    : '${user.fullName}, роль: ${roleTitle(user.role)}',
                 textAlign: TextAlign.center,
               ),
               if (notice != null) ...[
@@ -36,11 +55,17 @@ class HomeScreen extends StatelessWidget {
                 ),
               ],
               const SizedBox(height: 24),
-              _link(context, '/products', 'Каталог изделий'),
-              _link(context, '/confectioners', 'Кондитеры'),
-              _link(context, '/flavors', 'Вкусы'),
-              _link(context, '/workshops', 'Цеха'),
-              _link(context, '/customers', 'Покупатели'),
+              if (auth.allows(AppAction.viewCatalog)) ...[
+                _link(context, '/products', 'Каталог изделий'),
+                _link(context, '/confectioners', 'Кондитеры'),
+                _link(context, '/flavors', 'Вкусы'),
+                _link(context, '/workshops', 'Цеха'),
+              ],
+              if (auth.allows(AppAction.manageCustomers)) _link(context, '/customers', 'Покупатели'),
+              if (auth.allows(AppAction.viewOwnOrders)) _link(context, '/my-orders', 'Мои заказы'),
+              if (auth.allows(AppAction.manageOrders)) _link(context, '/orders', 'Оформление заказов'),
+              if (auth.allows(AppAction.manageUsers)) _link(context, '/admin/users', 'Пользователи'),
+              if (auth.allows(AppAction.viewStats)) _link(context, '/admin/stats', 'Статистика'),
             ],
           ),
         ),

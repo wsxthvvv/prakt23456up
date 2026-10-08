@@ -6,7 +6,10 @@ import '../core/breakpoints.dart';
 import '../models/customer.dart';
 import '../models/customer_query.dart';
 import '../routing/query_codec.dart';
+import '../auth/access_policy.dart';
+import '../auth/auth_notifier.dart';
 import '../state/catalog_notifier.dart';
+import '../widgets/api_feedback.dart';
 import '../widgets/catalog_frame.dart';
 import '../widgets/debounced_search_field.dart';
 import '../widgets/entity_table.dart';
@@ -41,8 +44,12 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
     final notifier = context.watch<CatalogNotifier<Customer, CustomerQuery>>();
     final q = notifier.query;
     final compact = isCompactWidth(context);
+    final manage = context.watch<AuthNotifier>().allows(AppAction.manageCustomers);
+    final restore = context.watch<AuthNotifier>().allows(AppAction.restore);
+    final hard = context.watch<AuthNotifier>().allows(AppAction.hardDelete);
     return CatalogFrame(
       title: 'Покупатели',
+      canCreate: manage,
       onCreate: () => context.push('/customers/new'),
       selectedCount: notifier.selected.length,
       onDeleteSelected: () => _deleteSelected(notifier),
@@ -95,7 +102,10 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                     ),
                     title: Text(item.fullName),
                     subtitle: Text(item.email),
-                    trailing: Row(mainAxisSize: MainAxisSize.min, children: _actions(notifier, item)),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: _actions(notifier, item, manage: manage, restore: restore, hard: hard),
+                    ),
                     onTap: () => context.push('/customers/${item.id}'),
                   ),
                 );
@@ -126,28 +136,38 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                   build: (item) => Text(item.loyaltyCard.active ? item.loyaltyCard.number : 'неактивна'),
                 ),
               ],
-              actions: (item) => _actions(notifier, item),
+              actions: (item) => _actions(notifier, item, manage: manage, restore: restore, hard: hard),
             ),
     );
   }
 
-  List<Widget> _actions(CatalogNotifier<Customer, CustomerQuery> notifier, Customer item) {
+  List<Widget> _actions(
+    CatalogNotifier<Customer, CustomerQuery> notifier,
+    Customer item, {
+    required bool manage,
+    required bool restore,
+    required bool hard,
+  }) {
     return rowActions(
+      canEdit: manage,
+      canSoftDelete: manage,
+      canRestore: restore,
+      canHardDelete: hard,
       onOpen: () => context.push('/customers/${item.id}'),
       onEdit: () => context.push('/customers/${item.id}/edit'),
       deleted: item.isDeleted,
-      onRestore: () async {
+      onRestore: () => showFailure(context, () async {
         await notifier.restoreOne(item.id);
         _navigate(notifier.query);
-      },
-      onSoftDelete: () async {
+      }),
+      onSoftDelete: () => showFailure(context, () async {
         await notifier.softDeleteOne(item.id);
         _navigate(notifier.query);
-      },
-      onHardDelete: () async {
+      }),
+      onHardDelete: () => showFailure(context, () async {
         await notifier.hardDeleteOne(item.id);
         _navigate(notifier.query);
-      },
+      }),
     );
   }
 }

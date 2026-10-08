@@ -65,6 +65,7 @@ function seed() {
     products: [],
     customers: [],
     users: [],
+    orders: [],
     refreshTokens: new Set(),
   };
 
@@ -171,7 +172,9 @@ function seed() {
 
   push('users', { username: 'admin', passwordHash: hash('admin123'), fullName: 'Администратор', email: 'admin@nyamka.test', role: 'admin' });
   push('users', { username: 'seller', passwordHash: hash('seller123'), fullName: 'Продавец зала', email: 'seller@nyamka.test', role: 'seller' });
-  push('users', { username: 'buyer', passwordHash: hash('buyer123'), fullName: 'Соколова Анна', email: 'anna.sokolova@nyamka.test', role: 'buyer' });
+  const buyerId = push('users', { username: 'buyer', passwordHash: hash('buyer123'), fullName: 'Соколова Анна', email: 'anna.sokolova@nyamka.test', role: 'buyer' });
+  push('orders', { userId: buyerId, productName: 'Наполеон', qty: 1, status: 'open' });
+  push('orders', { userId: buyerId, productName: 'Эклер ванильный', qty: 2, status: 'closed' });
 }
 
 function byId(collection, id) {
@@ -316,6 +319,22 @@ function requireRole(res, user, minRole) {
     return false;
   }
   return true;
+}
+
+function requireExact(res, user, role) {
+  if (!requireRole(res, user, 'buyer')) return false;
+  if (user.role !== role) {
+    fail(res, 403, 'Недостаточно прав для этого действия.');
+    return false;
+  }
+  return true;
+}
+
+function passwordError(password) {
+  if (password.length < 8) return 'Не короче 8 символов';
+  if (!/\d/.test(password)) return 'Нужна хотя бы одна цифра';
+  if (!/[^A-Za-z0-9]/.test(password)) return 'Нужен специальный символ';
+  return '';
 }
 
 function publicUser(user) {
@@ -500,6 +519,31 @@ async function handle(req, res, url) {
 
   const user = currentUser(req);
 
+  if (path === '/api/auth/register' && method === 'POST') {
+    const body = await readBody(req);
+    if (!body) return fail(res, 400, 'Тело запроса не является корректным JSON');
+    const errors = {};
+    const username = str(body.username);
+    const password = String(body.password || '');
+    const email = str(body.email);
+    const fullName = str(body.fullName);
+    if (username.length < 3) errors.username = 'Укажите логин не короче 3 символов';
+    else if (db.users.some((item) => item.username === username)) errors.username = 'Такой логин уже занят';
+    const passwordIssue = passwordError(password);
+    if (passwordIssue) errors.password = passwordIssue;
+    if (!/^[\w.+-]+@[\w-]+\.[\w.-]+$/.test(email)) errors.email = 'Некорректный адрес почты';
+    if (fullName.length < 3) errors.fullName = 'Укажите имя и фамилию';
+    if (Object.keys(errors).length) return fail(res, 422, 'Ошибка валидации', errors);
+    const created = byId('users', push('users', {
+      username,
+      passwordHash: hash(password),
+      fullName,
+      email,
+      role: 'buyer',
+    }));
+    return send(res, 201, publicUser(created));
+  }
+
   if (path === '/api/auth/login' && method === 'POST') {
     const body = await readBody(req);
     if (!body) return fail(res, 400, 'Тело запроса не является корректным JSON');
@@ -530,6 +574,77 @@ async function handle(req, res, url) {
     const body = await readBody(req);
     if (body && body.refreshToken) db.refreshTokens.delete(body.refreshToken);
     return send(res, 204, {});
+  }
+
+  if (path === '/api/my-orders' && method === 'GET') {
+    if (!requireExact(res, user, 'buyer')) return;
+    const items = db.orders.filter((row) => !row.deletedAt && row.userId === user.id);
+    return send(res, 200, { items, page: 1, size: items.length || 1, total: items.length, totalPages: 1 });
+  }
+
+  if (path === '/api/my-orders' && method === 'POST') {
+    if (!requireExact(res, user, 'buyer')) return;
+    const body = await readBody(req);
+    if (!body) return fail(res, 400, 'Тело запроса не является корректным JSON');
+    const errors = {};
+    if (str(body.productName).length < 2) errors.productName = 'Укажите изделие';
+    const qty = Number(body.qty);
+    if (!Number.isInteger(qty) || qty < 1) errors.qty = 'Укажите количество';
+    if (Object.keys(errors).length) return fail(res, 422, 'Ошибка валидации', errors);
+    const created = byId('orders', push('orders', {
+      userId: user.id,
+      productName: str(body.productName),
+      qty,
+      status: 'open',
+    }));
+    return send(res, 201, created);
+  }
+
+  if (path === '/api/orders' && method === 'GET') {
+    if (!requireExact(res, user, 'seller')) return;
+    const items = db.orders.filter((row) => !row.deletedAt);
+    return send(res, 200, { items, page: 1, size: items.length || 1, total: items.length, totalPages: 1 });
+  }
+
+  const closeOrder = path.match(/^\/api\/orders\/(\d+)\/close$/);
+  if (closeOrder && method === 'POST') {
+    if (!requireExact(res, user, 'seller')) return;
+    const row = byId('orders', closeOrder[1]);
+    if (!row || row.deletedAt) return fail(res, 404, 'Заказ не найден.');
+    row.status = 'closed';
+    return send(res, 200, row);
+  }
+
+  if (path === '/api/users' && method === 'GET') {
+    if (!requireExact(res, user, 'admin')) return;
+    const items = db.users.filter((item) => !item.deletedAt).map(publicUser);
+    return send(res, 200, { items, page: 1, size: items.length || 1, total: items.length, totalPages: 1 });
+  }
+
+  const userPath = path.match(/^\/api\/users\/(\d+)$/);
+  if (userPath && method === 'PATCH') {
+    if (!requireExact(res, user, 'admin')) return;
+    const body = await readBody(req);
+    if (!body) return fail(res, 400, 'Тело запроса не является корректным JSON');
+    const row = byId('users', userPath[1]);
+    if (!row || row.deletedAt) return fail(res, 404, 'Пользователь не найден.');
+    const role = str(body.role);
+    if (!Object.prototype.hasOwnProperty.call(ROLE_LEVEL, role)) {
+      return fail(res, 422, 'Ошибка валидации', { role: 'Выберите роль' });
+    }
+    if (row.id === user.id) return fail(res, 409, 'Нельзя сменить роль своей учётной записи.');
+    row.role = role;
+    return send(res, 200, publicUser(row));
+  }
+
+  if (path === '/api/stats' && method === 'GET') {
+    if (!requireExact(res, user, 'admin')) return;
+    return send(res, 200, {
+      products: alive('products').length,
+      orders: alive('orders').length,
+      users: db.users.filter((item) => !item.deletedAt).length,
+      customers: alive('customers').length,
+    });
   }
 
   if (path === '/api/countries' && method === 'GET') {

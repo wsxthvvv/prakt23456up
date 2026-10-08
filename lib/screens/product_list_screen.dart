@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../auth/access_policy.dart';
+import '../auth/auth_notifier.dart';
 import '../core/breakpoints.dart';
+import '../widgets/api_feedback.dart';
 import '../routing/query_codec.dart';
 import '../models/product.dart';
 import '../models/product_query.dart';
@@ -53,6 +56,9 @@ class _ProductListScreenState extends State<ProductListScreen> {
     final notifier = context.watch<ProductListNotifier>();
     final q = notifier.query;
     final compact = isCompactWidth(context);
+    final manage = context.watch<AuthNotifier>().allows(AppAction.manageCatalog);
+    final restore = context.watch<AuthNotifier>().allows(AppAction.restore);
+    final hard = context.watch<AuthNotifier>().allows(AppAction.hardDelete);
     final references = context.watch<ReferenceRepository>();
     final flavors = context
         .read<FlavorRepository>()
@@ -64,17 +70,18 @@ class _ProductListScreenState extends State<ProductListScreen> {
       appBar: AppBar(
         title: const Text('Каталог изделий'),
         actions: [
-          if (notifier.hasSelection)
+          if (manage && notifier.hasSelection)
             TextButton.icon(
               onPressed: () => _confirmDeleteSelected(notifier),
               icon: const Icon(Icons.delete_outline),
               label: Text('Удалить (${notifier.selected.length})'),
             ),
-          IconButton(
-            tooltip: 'Новое изделие',
-            onPressed: () => context.push('/products/new'),
-            icon: const Icon(Icons.add),
-          ),
+          if (manage)
+            IconButton(
+              tooltip: 'Новое изделие',
+              onPressed: () => context.push('/products/new'),
+              icon: const Icon(Icons.add),
+            ),
           IconButton(
             tooltip: 'На главную',
             onPressed: () => context.go('/'),
@@ -175,8 +182,20 @@ class _ProductListScreenState extends State<ProductListScreen> {
                   children: [
                     Expanded(
                       child: compact
-                          ? _ProductCardList(notifier: notifier, onNavigate: _navigate)
-                          : _ProductTable(notifier: notifier, onNavigate: _navigate),
+                          ? _ProductCardList(
+                              notifier: notifier,
+                              onNavigate: _navigate,
+                              manage: manage,
+                              restore: restore,
+                              hard: hard,
+                            )
+                          : _ProductTable(
+                              notifier: notifier,
+                              onNavigate: _navigate,
+                              manage: manage,
+                              restore: restore,
+                              hard: hard,
+                            ),
                     ),
                     const SizedBox(height: 8),
                     PaginationBar(
@@ -196,10 +215,19 @@ class _ProductListScreenState extends State<ProductListScreen> {
 }
 
 class _ProductTable extends StatelessWidget {
-  const _ProductTable({required this.notifier, required this.onNavigate});
+  const _ProductTable({
+    required this.notifier,
+    required this.onNavigate,
+    required this.manage,
+    required this.restore,
+    required this.hard,
+  });
 
   final ProductListNotifier notifier;
   final void Function(ProductQuery query) onNavigate;
+  final bool manage;
+  final bool restore;
+  final bool hard;
 
   @override
   Widget build(BuildContext context) {
@@ -232,16 +260,33 @@ class _ProductTable extends StatelessWidget {
         TableColumnSpec(label: 'Цех', build: (p) => Text(workshopNames[p.workshopId] ?? '—')),
         TableColumnSpec(label: 'Остаток', numeric: true, build: (p) => Text('${p.stockAvailable}/${p.stockTotal}')),
       ],
-      actions: (p) => _productActions(context, notifier, p, onNavigate),
+      actions: (p) => _productActions(
+        context,
+        notifier,
+        p,
+        onNavigate,
+        manage: manage,
+        restore: restore,
+        hard: hard,
+      ),
     );
   }
 }
 
 class _ProductCardList extends StatelessWidget {
-  const _ProductCardList({required this.notifier, required this.onNavigate});
+  const _ProductCardList({
+    required this.notifier,
+    required this.onNavigate,
+    required this.manage,
+    required this.restore,
+    required this.hard,
+  });
 
   final ProductListNotifier notifier;
   final void Function(ProductQuery query) onNavigate;
+  final bool manage;
+  final bool restore;
+  final bool hard;
 
   @override
   Widget build(BuildContext context) {
@@ -263,7 +308,15 @@ class _ProductCardList extends StatelessWidget {
             subtitle: Text('${p.sku} · ${references.categoryName(p.categoryId)} · ${workshopNames[p.workshopId] ?? '—'}'),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
-              children: _productActions(context, notifier, p, onNavigate),
+              children: _productActions(
+                context,
+                notifier,
+                p,
+                onNavigate,
+                manage: manage,
+                restore: restore,
+                hard: hard,
+              ),
             ),
             onTap: () => context.push('/products/${p.id}'),
           ),
@@ -277,45 +330,51 @@ List<Widget> _productActions(
   BuildContext context,
   ProductListNotifier notifier,
   Product p,
-  void Function(ProductQuery query) onNavigate,
-) {
+  void Function(ProductQuery query) onNavigate, {
+  required bool manage,
+  required bool restore,
+  required bool hard,
+}) {
   return [
     IconButton(
       tooltip: 'Карточка',
       icon: const Icon(Icons.open_in_new),
       onPressed: () => context.push('/products/${p.id}'),
     ),
-    IconButton(
-      tooltip: 'Изменить',
-      icon: const Icon(Icons.edit_outlined),
-      onPressed: () => context.push('/products/${p.id}/edit'),
-    ),
-    if (p.isDeleted)
+    if (manage)
+      IconButton(
+        tooltip: 'Изменить',
+        icon: const Icon(Icons.edit_outlined),
+        onPressed: () => context.push('/products/${p.id}/edit'),
+      ),
+    if (p.isDeleted && restore)
       IconButton(
         tooltip: 'Восстановить',
         icon: const Icon(Icons.restore),
-        onPressed: () async {
+        onPressed: () => showFailure(context, () async {
           await notifier.restoreOne(p.id);
           onNavigate(notifier.query);
-        },
+        }),
       )
-    else ...[
-      IconButton(
-        tooltip: 'Скрыть (логическое удаление)',
-        icon: const Icon(Icons.delete_outline),
-        onPressed: () async {
-          await notifier.softDeleteOne(p.id);
-          onNavigate(notifier.query);
-        },
-      ),
-      IconButton(
-        tooltip: 'Удалить навсегда',
-        icon: const Icon(Icons.delete_forever),
-        onPressed: () async {
-          await notifier.hardDeleteOne(p.id);
-          onNavigate(notifier.query);
-        },
-      ),
+    else if (!p.isDeleted) ...[
+      if (manage)
+        IconButton(
+          tooltip: 'Скрыть (логическое удаление)',
+          icon: const Icon(Icons.delete_outline),
+          onPressed: () => showFailure(context, () async {
+            await notifier.softDeleteOne(p.id);
+            onNavigate(notifier.query);
+          }),
+        ),
+      if (hard)
+        IconButton(
+          tooltip: 'Удалить навсегда',
+          icon: const Icon(Icons.delete_forever),
+          onPressed: () => showFailure(context, () async {
+            await notifier.hardDeleteOne(p.id);
+            onNavigate(notifier.query);
+          }),
+        ),
     ],
   ];
 }

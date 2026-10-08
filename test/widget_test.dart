@@ -1,9 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:prakt2up/auth/auth_notifier.dart';
 import 'package:prakt2up/data/seed_data.dart';
 import 'package:prakt2up/models/product.dart';
 import 'package:prakt2up/models/product_query.dart';
 import 'package:prakt2up/repositories/in_memory_product_repository.dart';
 import 'package:prakt2up/routing/router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   test('deleteMany performs logical delete', () async {
@@ -53,8 +55,13 @@ void main() {
     expect(seedCustomers.map((item) => item.email).toSet(), hasLength(seedCustomers.length));
   });
 
-  test('router includes practice 3 sections', () {
-    expect(appRouter.routeInformationProvider, isNotNull);
+  test('router includes practice 3 sections', () async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    SharedPreferences.setMockInitialValues({});
+    final auth = AuthNotifier(await SharedPreferences.getInstance());
+    final router = buildRouter(auth);
+    expect(router.routeInformationProvider, isNotNull);
+    expect(router.configuration.routes.length, greaterThan(5));
   });
 
   test('duplicate sku is rejected', () async {

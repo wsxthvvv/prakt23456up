@@ -6,24 +6,11 @@ import 'package:flutter/foundation.dart';
 import 'api_exceptions.dart';
 import 'config.dart';
 
-class ApiSession {
-  String? accessToken;
-
-  Future<void> login(Dio dio) async {
-    final response = await dio.post('/auth/login', data: {
-      'username': apiUsername,
-      'password': apiPassword,
-    });
-    final data = response.data;
-    if (data is Map && data['accessToken'] is String) {
-      accessToken = data['accessToken'] as String;
-      return;
-    }
-    throw const ServerException('Сервер не выдал токен доступа.');
-  }
-}
-
-Dio buildDio({String? Function()? tokenProvider}) {
+Dio buildDio({
+  String? Function()? tokenProvider,
+  Future<bool> Function()? refresh,
+  Future<void> Function()? onSessionLost,
+}) {
   final dio = Dio(
     BaseOptions(
       baseUrl: apiBaseUrl,
@@ -49,8 +36,30 @@ Dio buildDio({String? Function()? tokenProvider}) {
         }
         handler.next(options);
       },
-      onResponse: (response, handler) {
+      onResponse: (response, handler) async {
         final status = response.statusCode ?? 0;
+        final path = response.requestOptions.path;
+        if (status == 401 &&
+            refresh != null &&
+            !path.contains('/auth/') &&
+            response.requestOptions.extra['authRetry'] != true) {
+          final ok = await refresh();
+          if (ok) {
+            final options = response.requestOptions;
+            options.extra['authRetry'] = true;
+            final token = tokenProvider?.call();
+            if (token != null && token.isNotEmpty) {
+              options.headers['Authorization'] = 'Bearer $token';
+            }
+            try {
+              final retried = await dio.fetch(options);
+              return handler.resolve(retried);
+            } on DioException catch (error) {
+              return handler.reject(error);
+            }
+          }
+          await onSessionLost?.call();
+        }
         if (kDebugMode && status < 400) {
           debugPrint('[API] ${response.requestOptions.method} ${response.requestOptions.uri} → $status');
         }

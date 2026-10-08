@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../auth/access_policy.dart';
+import '../auth/auth_notifier.dart';
 import '../models/customer.dart';
 import '../models/customer_query.dart';
 import '../models/flavor.dart';
@@ -17,8 +19,15 @@ import '../screens/customer_list_screen.dart';
 import '../screens/flavor_detail_screen.dart';
 import '../screens/flavor_form_screen.dart';
 import '../screens/flavor_list_screen.dart';
+import '../screens/forbidden_screen.dart';
 import '../screens/home_screen.dart';
+import '../screens/login_screen.dart';
+import '../screens/my_orders_screen.dart';
 import '../screens/not_found_screen.dart';
+import '../screens/order_desk_screen.dart';
+import '../screens/register_screen.dart';
+import '../screens/stats_screen.dart';
+import '../screens/users_screen.dart';
 import '../screens/product_detail_screen.dart';
 import '../screens/product_form_screen.dart';
 import '../screens/product_list_screen.dart';
@@ -32,10 +41,50 @@ import 'query_codec.dart';
 import 'query_equality.dart';
 import 'query_sync.dart';
 
-final appRouter = GoRouter(
-  initialLocation: '/',
-  routes: [
+GoRouter buildRouter(AuthNotifier auth, {GlobalKey<NavigatorState>? navigatorKey}) {
+  return GoRouter(
+    navigatorKey: navigatorKey,
+    refreshListenable: auth,
+    initialLocation: '/',
+    redirect: (context, state) {
+      final loggedIn = auth.isAuthenticated;
+      final target = state.matchedLocation;
+      final isPublic = target == '/login' || target == '/register';
+      if (!loggedIn && !isPublic) {
+        return '/login?from=${Uri.encodeComponent(state.uri.toString())}';
+      }
+      if (loggedIn && isPublic) {
+        final from = state.uri.queryParameters['from'];
+        if (from != null &&
+            from.startsWith('/') &&
+            !from.startsWith('/login') &&
+            !from.startsWith('/register')) {
+          return from;
+        }
+        return '/';
+      }
+      if (!loggedIn) return null;
+      final role = auth.role;
+      if (role == null) return '/login';
+      if (target == '/my-orders') return allowsAction(role, AppAction.viewOwnOrders) ? null : '/forbidden';
+      if (target == '/orders') return allowsAction(role, AppAction.manageOrders) ? null : '/forbidden';
+      if (target.startsWith('/admin')) return allowsAction(role, AppAction.manageUsers) ? null : '/forbidden';
+      if (target.startsWith('/customers')) {
+        return allowsAction(role, AppAction.manageCustomers) ? null : '/forbidden';
+      }
+      final staffWrite = RegExp(r'^/(products|confectioners|flavors|workshops)/(new|.+/edit)$').hasMatch(target);
+      if (staffWrite) return allowsAction(role, AppAction.manageCatalog) ? null : '/forbidden';
+      return null;
+    },
+    routes: [
+    GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
+    GoRoute(path: '/register', builder: (context, state) => const RegisterScreen()),
+    GoRoute(path: '/forbidden', builder: (context, state) => const ForbiddenScreen()),
     GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
+    GoRoute(path: '/my-orders', builder: (context, state) => const MyOrdersScreen()),
+    GoRoute(path: '/orders', builder: (context, state) => const OrderDeskScreen()),
+    GoRoute(path: '/admin/users', builder: (context, state) => const UsersScreen()),
+    GoRoute(path: '/admin/stats', builder: (context, state) => const StatsScreen()),
     GoRoute(
       path: '/products',
       builder: (context, state) => ProductQuerySync(
@@ -161,8 +210,9 @@ final appRouter = GoRouter(
       ],
     ),
   ],
-  errorBuilder: (context, state) => NotFoundScreen(location: state.uri.toString()),
-);
+    errorBuilder: (context, state) => NotFoundScreen(location: state.uri.toString()),
+  );
+}
 
 Widget _detailOrMissing(GoRouterState state, Widget Function(int id) build) {
   final id = int.tryParse(state.pathParameters['id'] ?? '');
