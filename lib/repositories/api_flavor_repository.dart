@@ -8,13 +8,13 @@ import 'remote_collection.dart';
 
 class ApiFlavorRepository implements FlavorRepository {
   ApiFlavorRepository(Dio dio)
-      : _remote = RemoteCollection<Flavor>(
-          dio: dio,
-          resource: 'flavors',
-          decode: Flavor.fromJson,
-          encode: _write,
-          idOf: (item) => item.id,
-        );
+    : _remote = RemoteCollection<Flavor>(
+        dio: dio,
+        resource: 'flavors',
+        decode: Flavor.fromJson,
+        encode: _write,
+        idOf: (item) => item.id,
+      );
 
   final RemoteCollection<Flavor> _remote;
 
@@ -58,7 +58,7 @@ class ApiFlavorRepository implements FlavorRepository {
 }
 
 Map<String, dynamic> _write(Flavor item) => {
-      'name': item.name,
-      'description': item.description,
-      'intensity': item.intensity,
-    };
+  'name': item.name,
+  'description': item.description,
+  'intensity': item.intensity,
+};

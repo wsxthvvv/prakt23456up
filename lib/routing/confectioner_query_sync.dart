@@ -19,7 +19,9 @@ class _ConfectionerQuerySyncState extends State<ConfectionerQuerySync> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final parsed = confectionerQueryFromUri(GoRouterState.of(context).uri.queryParameters);
+    final parsed = confectionerQueryFromUri(
+      GoRouterState.of(context).uri.queryParameters,
+    );
     final notifier = context.read<ConfectionerListNotifier>();
     if (!confectionerQueriesEqual(parsed, notifier.query)) {
       notifier.applyQuery(parsed);

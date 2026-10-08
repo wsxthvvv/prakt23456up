@@ -47,7 +47,13 @@ class _StatsScreenState extends State<StatsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Статистика'),
-        actions: [IconButton(onPressed: () => context.go('/'), icon: const Icon(Icons.home))],
+        actions: [
+          IconButton(
+            tooltip: 'На главную',
+            onPressed: () => context.go('/'),
+            icon: const Icon(Icons.home),
+          ),
+        ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -55,12 +61,28 @@ class _StatsScreenState extends State<StatsScreen> {
           const Text('Этот экран есть только у администратора.'),
           const SizedBox(height: 16),
           if (_loading) const Center(child: CircularProgressIndicator()),
-          if (_error != null) Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+          if (_error != null)
+            Text(
+              _error!,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
           if (stats != null) ...[
-            ListTile(title: const Text('Изделия'), trailing: Text('${stats['products'] ?? 0}')),
-            ListTile(title: const Text('Заказы'), trailing: Text('${stats['orders'] ?? 0}')),
-            ListTile(title: const Text('Пользователи'), trailing: Text('${stats['users'] ?? 0}')),
-            ListTile(title: const Text('Покупатели в картотеке'), trailing: Text('${stats['customers'] ?? 0}')),
+            ListTile(
+              title: const Text('Изделия'),
+              trailing: Text('${stats['products'] ?? 0}'),
+            ),
+            ListTile(
+              title: const Text('Заказы'),
+              trailing: Text('${stats['orders'] ?? 0}'),
+            ),
+            ListTile(
+              title: const Text('Пользователи'),
+              trailing: Text('${stats['users'] ?? 0}'),
+            ),
+            ListTile(
+              title: const Text('Покупатели в картотеке'),
+              trailing: Text('${stats['customers'] ?? 0}'),
+            ),
           ],
         ],
       ),

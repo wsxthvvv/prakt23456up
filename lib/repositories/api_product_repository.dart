@@ -8,13 +8,13 @@ import 'remote_collection.dart';
 
 class ApiProductRepository implements ProductRepository {
   ApiProductRepository(Dio dio)
-      : _remote = RemoteCollection<Product>(
-          dio: dio,
-          resource: 'products',
-          decode: Product.fromJson,
-          encode: _write,
-          idOf: (item) => item.id,
-        );
+    : _remote = RemoteCollection<Product>(
+        dio: dio,
+        resource: 'products',
+        decode: Product.fromJson,
+        encode: _write,
+        idOf: (item) => item.id,
+      );
 
   final RemoteCollection<Product> _remote;
 
@@ -59,7 +59,9 @@ class ApiProductRepository implements ProductRepository {
   @override
   bool skuExists(String sku, {int? exceptId}) {
     final needle = sku.trim().toLowerCase();
-    return _remote.cache.any((item) => item.id != exceptId && item.sku.toLowerCase() == needle);
+    return _remote.cache.any(
+      (item) => item.id != exceptId && item.sku.toLowerCase() == needle,
+    );
   }
 
   @override
@@ -69,14 +71,14 @@ class ApiProductRepository implements ProductRepository {
 }
 
 Map<String, dynamic> _write(Product product) => {
-      'name': product.name,
-      'sku': product.sku,
-      'year': product.year,
-      'weightGrams': product.weightGrams,
-      'categoryId': product.categoryId,
-      'workshopId': product.workshopId,
-      'confectionerIds': product.confectionerIds,
-      'flavorTagIds': product.flavorTagIds,
-      'stockTotal': product.stockTotal,
-      'stockAvailable': product.stockAvailable,
-    };
+  'name': product.name,
+  'sku': product.sku,
+  'year': product.year,
+  'weightGrams': product.weightGrams,
+  'categoryId': product.categoryId,
+  'workshopId': product.workshopId,
+  'confectionerIds': product.confectionerIds,
+  'flavorTagIds': product.flavorTagIds,
+  'stockTotal': product.stockTotal,
+  'stockAvailable': product.stockAvailable,
+};

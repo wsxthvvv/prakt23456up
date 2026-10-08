@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:prakt2up/auth/auth_notifier.dart';
 import 'package:prakt2up/data/seed_data.dart';
 import 'package:prakt2up/models/product.dart';
@@ -19,7 +20,9 @@ void main() {
     final after = await repo.find(const ProductQuery(size: 50));
     expect(after.items.any((p) => p.id == id), isFalse);
 
-    final withDeleted = await repo.find(const ProductQuery(size: 50, includeDeleted: true));
+    final withDeleted = await repo.find(
+      const ProductQuery(size: 50, includeDeleted: true),
+    );
     expect(withDeleted.items.any((p) => p.id == id && p.isDeleted), isTrue);
   });
 
@@ -38,12 +41,20 @@ void main() {
 
   test('seed products stay inside workshop flavors and confectioners', () {
     for (final product in seedProducts) {
-      final workshop = seedWorkshops.firstWhere((item) => item.id == product.workshopId);
+      final workshop = seedWorkshops.firstWhere(
+        (item) => item.id == product.workshopId,
+      );
       for (final flavorId in product.flavorTagIds) {
-        expect(workshop.flavorIds, contains(flavorId), reason: 'изделие ${product.id}, вкус $flavorId');
+        expect(
+          workshop.flavorIds,
+          contains(flavorId),
+          reason: 'изделие ${product.id}, вкус $flavorId',
+        );
       }
       for (final confectionerId in product.confectionerIds) {
-        final confectioner = seedConfectioners.firstWhere((item) => item.id == confectionerId);
+        final confectioner = seedConfectioners.firstWhere(
+          (item) => item.id == confectionerId,
+        );
         expect(
           confectioner.workshopId,
           product.workshopId,
@@ -51,8 +62,14 @@ void main() {
         );
       }
     }
-    expect(seedProducts.map((item) => item.sku).toSet(), hasLength(seedProducts.length));
-    expect(seedCustomers.map((item) => item.email).toSet(), hasLength(seedCustomers.length));
+    expect(
+      seedProducts.map((item) => item.sku).toSet(),
+      hasLength(seedProducts.length),
+    );
+    expect(
+      seedCustomers.map((item) => item.email).toSet(),
+      hasLength(seedCustomers.length),
+    );
   });
 
   test('router includes practice 3 sections', () async {
@@ -61,12 +78,15 @@ void main() {
     final auth = AuthNotifier(await SharedPreferences.getInstance());
     final router = buildRouter(auth);
     expect(router.routeInformationProvider, isNotNull);
-    expect(router.configuration.routes.length, greaterThan(5));
+    final shell = router.configuration.routes.whereType<ShellRoute>().single;
+    expect(shell.routes.length, greaterThan(5));
   });
 
   test('duplicate sku is rejected', () async {
     final repo = InMemoryProductRepository();
-    final existing = (await repo.find(const ProductQuery(size: 50))).items.first;
+    final existing = (await repo.find(const ProductQuery(size: 50)))
+        .items
+        .first;
     await expectLater(
       repo.create(
         Product(

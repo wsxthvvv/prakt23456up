@@ -15,6 +15,7 @@ import '../widgets/debounced_search_field.dart';
 import '../widgets/entity_table.dart';
 import '../widgets/filter_dropdown.dart';
 import '../widgets/pagination_bar.dart';
+import '../widgets/record_card.dart';
 import '../widgets/row_actions.dart';
 
 class FlavorListScreen extends StatefulWidget {
@@ -27,11 +28,14 @@ class FlavorListScreen extends StatefulWidget {
 class _FlavorListScreenState extends State<FlavorListScreen> {
   bool _filtersExpanded = true;
 
-  CatalogNotifier<Flavor, FlavorQuery> get _notifier => context.read<CatalogNotifier<Flavor, FlavorQuery>>();
+  CatalogNotifier<Flavor, FlavorQuery> get _notifier =>
+      context.read<CatalogNotifier<Flavor, FlavorQuery>>();
 
   void _navigate(FlavorQuery query) => context.go(flavorQueryToLocation(query));
 
-  Future<void> _deleteSelected(CatalogNotifier<Flavor, FlavorQuery> notifier) async {
+  Future<void> _deleteSelected(
+    CatalogNotifier<Flavor, FlavorQuery> notifier,
+  ) async {
     final ok = await confirmLogicalDelete(context, notifier.selected.length);
     if (ok && mounted) {
       await notifier.deleteSelected();
@@ -44,7 +48,9 @@ class _FlavorListScreenState extends State<FlavorListScreen> {
     final notifier = context.watch<CatalogNotifier<Flavor, FlavorQuery>>();
     final q = notifier.query;
     final compact = isCompactWidth(context);
-    final manage = context.watch<AuthNotifier>().allows(AppAction.manageCatalog);
+    final manage = context.watch<AuthNotifier>().allows(
+      AppAction.manageCatalog,
+    );
     final restore = context.watch<AuthNotifier>().allows(AppAction.restore);
     final hard = context.watch<AuthNotifier>().allows(AppAction.hardDelete);
     return CatalogFrame(
@@ -54,7 +60,8 @@ class _FlavorListScreenState extends State<FlavorListScreen> {
       selectedCount: notifier.selected.length,
       onDeleteSelected: () => _deleteSelected(notifier),
       filtersExpanded: _filtersExpanded,
-      onToggleFilters: () => setState(() => _filtersExpanded = !_filtersExpanded),
+      onToggleFilters: () =>
+          setState(() => _filtersExpanded = !_filtersExpanded),
       filters: [
         SizedBox(
           width: 260,
@@ -68,9 +75,15 @@ class _FlavorListScreenState extends State<FlavorListScreen> {
           label: 'Интенсивность',
           value: q.intensity,
           items: [
-            DropdownMenuItem(value: null, child: FilterDropdown.menuText('Любая')),
+            DropdownMenuItem(
+              value: null,
+              child: FilterDropdown.menuText('Любая'),
+            ),
             for (var level = 1; level <= 5; level++)
-              DropdownMenuItem(value: level, child: FilterDropdown.menuText('$level')),
+              DropdownMenuItem(
+                value: level,
+                child: FilterDropdown.menuText('$level'),
+              ),
           ],
           onChanged: (value) => _navigate(q.copyWith(intensity: value)),
         ),
@@ -90,23 +103,22 @@ class _FlavorListScreenState extends State<FlavorListScreen> {
         onSizeChanged: (size) => _navigate(q.copyWith(size: size)),
       ),
       body: compact
-          ? ListView.builder(
+          ? CardBoard(
               itemCount: notifier.result.items.length,
               itemBuilder: (context, index) {
                 final item = notifier.result.items[index];
-                return Card(
-                  child: ListTile(
-                    leading: Checkbox(
-                      value: notifier.selected.contains(item.id),
-                      onChanged: (_) => notifier.toggleSelection(item.id),
-                    ),
-                    title: Text(item.name),
-                    subtitle: Text('Интенсивность ${item.intensity}'),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: _actions(notifier, item, manage: manage, restore: restore, hard: hard),
-                    ),
-                    onTap: () => context.push('/flavors/${item.id}'),
+                return RecordCard(
+                  selected: notifier.selected.contains(item.id),
+                  onSelected: (_) => notifier.toggleSelection(item.id),
+                  title: item.name,
+                  subtitle: 'Интенсивность ${item.intensity}',
+                  onTap: () => context.push('/flavors/${item.id}'),
+                  actions: _actions(
+                    notifier,
+                    item,
+                    manage: manage,
+                    restore: restore,
+                    hard: hard,
                   ),
                 );
               },
@@ -119,19 +131,36 @@ class _FlavorListScreenState extends State<FlavorListScreen> {
               sortField: q.sortField,
               sortAscending: q.sortAscending,
               onSort: (field) => _navigate(
-                q.copyWith(sortField: field, sortAscending: field == q.sortField ? !q.sortAscending : true),
+                q.copyWith(
+                  sortField: field,
+                  sortAscending: field == q.sortField ? !q.sortAscending : true,
+                ),
               ),
               columns: [
-                TableColumnSpec(label: 'Название', sortField: 'name', build: (item) => Text(item.name)),
+                TableColumnSpec(
+                  label: 'Название',
+                  sortField: 'name',
+                  build: (item) => Text(item.name),
+                ),
                 TableColumnSpec(
                   label: 'Интенсивность',
                   sortField: 'intensity',
                   numeric: true,
                   build: (item) => Text('${item.intensity}'),
                 ),
-                TableColumnSpec(label: 'Описание', sortField: 'description', build: (item) => Text(item.description)),
+                TableColumnSpec(
+                  label: 'Описание',
+                  sortField: 'description',
+                  build: (item) => Text(item.description),
+                ),
               ],
-              actions: (item) => _actions(notifier, item, manage: manage, restore: restore, hard: hard),
+              actions: (item) => _actions(
+                notifier,
+                item,
+                manage: manage,
+                restore: restore,
+                hard: hard,
+              ),
             ),
     );
   }

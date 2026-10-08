@@ -44,22 +44,22 @@ class Confectioner {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'lastName': lastName,
-        'firstName': firstName,
-        'country': country,
-        'specialty': specialty,
-        'workshopId': workshopId,
-        'deletedAt': deletedAt?.toIso8601String(),
-      };
+    'id': id,
+    'lastName': lastName,
+    'firstName': firstName,
+    'country': country,
+    'specialty': specialty,
+    'workshopId': workshopId,
+    'deletedAt': deletedAt?.toIso8601String(),
+  };
 
   factory Confectioner.fromJson(Map<String, dynamic> json) => Confectioner(
-        id: jsonInt(json['id']),
-        lastName: jsonString(json['lastName']),
-        firstName: jsonString(json['firstName']),
-        country: jsonString(json['country']),
-        specialty: jsonString(json['specialty']),
-        workshopId: jsonRelationId(json, 'workshopId', 'workshop', 1),
-        deletedAt: jsonDate(json['deletedAt']),
-      );
+    id: jsonInt(json['id']),
+    lastName: jsonString(json['lastName']),
+    firstName: jsonString(json['firstName']),
+    country: jsonString(json['country']),
+    specialty: jsonString(json['specialty']),
+    workshopId: jsonRelationId(json, 'workshopId', 'workshop', 1),
+    deletedAt: jsonDate(json['deletedAt']),
+  );
 }

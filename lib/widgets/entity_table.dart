@@ -46,7 +46,9 @@ class EntityTable<T> extends StatelessWidget {
       for (final col in columns)
         DataColumn(
           numeric: col.numeric,
-          onSort: col.sortField != null && onSort != null ? (_, _) => onSort!(col.sortField!) : null,
+          onSort: col.sortField != null && onSort != null
+              ? (_, _) => onSort!(col.sortField!)
+              : null,
           label: Text(col.label),
         ),
       if (actions != null) const DataColumn(label: Text('Действия')),
@@ -64,8 +66,21 @@ class EntityTable<T> extends StatelessWidget {
                   onChanged: (_) => onToggleSelect!(idOf(item)),
                 ),
               ),
-            for (final col in columns) DataCell(col.build(item)),
-            if (actions != null) DataCell(Row(mainAxisSize: MainAxisSize.min, children: actions!(item))),
+            for (final col in columns)
+              DataCell(
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 240),
+                  child: DefaultTextStyle.merge(
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    child: col.build(item),
+                  ),
+                ),
+              ),
+            if (actions != null)
+              DataCell(
+                Row(mainAxisSize: MainAxisSize.min, children: actions!(item)),
+              ),
           ],
         ),
     ];
@@ -75,7 +90,9 @@ class EntityTable<T> extends StatelessWidget {
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: ConstrainedBox(
-          constraints: BoxConstraints(minWidth: MediaQuery.sizeOf(context).width - 32),
+          constraints: BoxConstraints(
+            minWidth: MediaQuery.sizeOf(context).width - 32,
+          ),
           child: DataTable(
             sortColumnIndex: _sortColumnIndex(),
             sortAscending: sortAscending,

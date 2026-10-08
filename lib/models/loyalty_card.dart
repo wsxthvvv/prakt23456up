@@ -14,16 +14,16 @@ class LoyaltyCard {
   });
 
   Map<String, dynamic> toJson() => {
-        'number': number,
-        'issuedOn': issuedOn,
-        'discountPercent': discountPercent,
-        'active': active,
-      };
+    'number': number,
+    'issuedOn': issuedOn,
+    'discountPercent': discountPercent,
+    'active': active,
+  };
 
   factory LoyaltyCard.fromJson(Map<String, dynamic> json) => LoyaltyCard(
-        number: jsonString(json['number']),
-        issuedOn: jsonString(json['issuedOn']),
-        discountPercent: jsonInt(json['discountPercent']),
-        active: jsonBool(json['active']),
-      );
+    number: jsonString(json['number']),
+    issuedOn: jsonString(json['issuedOn']),
+    discountPercent: jsonInt(json['discountPercent']),
+    active: jsonBool(json['active']),
+  );
 }

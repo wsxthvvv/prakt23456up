@@ -32,10 +32,14 @@ String roleTitle(AppRole role) {
 bool allowsAction(AppRole role, AppAction action) {
   return switch (action) {
     AppAction.viewCatalog => true,
-    AppAction.manageCatalog || AppAction.manageCustomers => role == AppRole.seller || role == AppRole.admin,
+    AppAction.manageCatalog || AppAction.manageCustomers =>
+      role == AppRole.seller || role == AppRole.admin,
     AppAction.viewOwnOrders => role == AppRole.buyer,
     AppAction.manageOrders => role == AppRole.seller,
-    AppAction.hardDelete || AppAction.restore || AppAction.manageUsers || AppAction.viewStats => role == AppRole.admin,
+    AppAction.hardDelete ||
+    AppAction.restore ||
+    AppAction.manageUsers ||
+    AppAction.viewStats => role == AppRole.admin,
   };
 }
 
@@ -43,6 +47,8 @@ String? passwordIssue(String value) {
   if (value.isEmpty) return 'Укажите пароль';
   if (value.length < 8) return 'Не короче 8 символов';
   if (!RegExp(r'\d').hasMatch(value)) return 'Нужна хотя бы одна цифра';
-  if (!RegExp(r'[^A-Za-z0-9]').hasMatch(value)) return 'Нужен специальный символ';
+  if (!RegExp(r'[^A-Za-z0-9]').hasMatch(value)) {
+    return 'Нужен специальный символ';
+  }
   return null;
 }

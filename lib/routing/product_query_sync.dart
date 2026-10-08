@@ -19,7 +19,9 @@ class _ProductQuerySyncState extends State<ProductQuerySync> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final parsed = productQueryFromUri(GoRouterState.of(context).uri.queryParameters);
+    final parsed = productQueryFromUri(
+      GoRouterState.of(context).uri.queryParameters,
+    );
     final notifier = context.read<ProductListNotifier>();
     if (!productQueriesEqual(parsed, notifier.query)) {
       notifier.applyQuery(parsed);

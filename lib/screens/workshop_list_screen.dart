@@ -17,6 +17,7 @@ import '../widgets/debounced_search_field.dart';
 import '../widgets/entity_table.dart';
 import '../widgets/filter_dropdown.dart';
 import '../widgets/pagination_bar.dart';
+import '../widgets/record_card.dart';
 import '../widgets/row_actions.dart';
 import '../widgets/workshop_delete_guard.dart';
 
@@ -30,18 +31,28 @@ class WorkshopListScreen extends StatefulWidget {
 class _WorkshopListScreenState extends State<WorkshopListScreen> {
   bool _filtersExpanded = true;
 
-  CatalogNotifier<Workshop, WorkshopQuery> get _notifier => context.read<CatalogNotifier<Workshop, WorkshopQuery>>();
+  CatalogNotifier<Workshop, WorkshopQuery> get _notifier =>
+      context.read<CatalogNotifier<Workshop, WorkshopQuery>>();
 
-  void _navigate(WorkshopQuery query) => context.go(workshopQueryToLocation(query));
+  void _navigate(WorkshopQuery query) =>
+      context.go(workshopQueryToLocation(query));
 
-  Future<void> _deleteSelected(CatalogNotifier<Workshop, WorkshopQuery> notifier) async {
+  Future<void> _deleteSelected(
+    CatalogNotifier<Workshop, WorkshopQuery> notifier,
+  ) async {
     final ok = await confirmLogicalDelete(context, notifier.selected.length);
     if (!ok || !mounted) return;
-    final done = await runWorkshopDelete(context, () => notifier.deleteSelected());
+    final done = await runWorkshopDelete(
+      context,
+      () => notifier.deleteSelected(),
+    );
     if (done && mounted) _navigate(notifier.query);
   }
 
-  Future<void> _guarded(Future<void> Function() action, CatalogNotifier<Workshop, WorkshopQuery> notifier) async {
+  Future<void> _guarded(
+    Future<void> Function() action,
+    CatalogNotifier<Workshop, WorkshopQuery> notifier,
+  ) async {
     final done = await runWorkshopDelete(context, action);
     if (done && mounted) _navigate(notifier.query);
   }
@@ -52,7 +63,9 @@ class _WorkshopListScreenState extends State<WorkshopListScreen> {
     final q = notifier.query;
     final compact = isCompactWidth(context);
     final flavors = context.read<FlavorRepository>().all;
-    final cities = {...context.read<WorkshopRepository>().all.map((w) => w.city)}.toList()..sort();
+    final cities = {
+      ...context.read<WorkshopRepository>().all.map((w) => w.city),
+    }.toList()..sort();
 
     String flavorLabel(Workshop item) {
       if (item.flavorIds.isEmpty) return '—';
@@ -66,7 +79,9 @@ class _WorkshopListScreenState extends State<WorkshopListScreen> {
           .join(', ');
     }
 
-    final manage = context.watch<AuthNotifier>().allows(AppAction.manageCatalog);
+    final manage = context.watch<AuthNotifier>().allows(
+      AppAction.manageCatalog,
+    );
     final restore = context.watch<AuthNotifier>().allows(AppAction.restore);
     final hard = context.watch<AuthNotifier>().allows(AppAction.hardDelete);
     return CatalogFrame(
@@ -76,7 +91,8 @@ class _WorkshopListScreenState extends State<WorkshopListScreen> {
       selectedCount: notifier.selected.length,
       onDeleteSelected: () => _deleteSelected(notifier),
       filtersExpanded: _filtersExpanded,
-      onToggleFilters: () => setState(() => _filtersExpanded = !_filtersExpanded),
+      onToggleFilters: () =>
+          setState(() => _filtersExpanded = !_filtersExpanded),
       filters: [
         SizedBox(
           width: 260,
@@ -90,8 +106,15 @@ class _WorkshopListScreenState extends State<WorkshopListScreen> {
           label: 'Город',
           value: q.city,
           items: [
-            DropdownMenuItem(value: null, child: FilterDropdown.menuText('Все города')),
-            for (final city in cities) DropdownMenuItem(value: city, child: FilterDropdown.menuText(city)),
+            DropdownMenuItem(
+              value: null,
+              child: FilterDropdown.menuText('Все города'),
+            ),
+            for (final city in cities)
+              DropdownMenuItem(
+                value: city,
+                child: FilterDropdown.menuText(city),
+              ),
           ],
           onChanged: (value) => _navigate(q.copyWith(city: value)),
         ),
@@ -111,23 +134,22 @@ class _WorkshopListScreenState extends State<WorkshopListScreen> {
         onSizeChanged: (size) => _navigate(q.copyWith(size: size)),
       ),
       body: compact
-          ? ListView.builder(
+          ? CardBoard(
               itemCount: notifier.result.items.length,
               itemBuilder: (context, index) {
                 final item = notifier.result.items[index];
-                return Card(
-                  child: ListTile(
-                    leading: Checkbox(
-                      value: notifier.selected.contains(item.id),
-                      onChanged: (_) => notifier.toggleSelection(item.id),
-                    ),
-                    title: Text(item.name),
-                    subtitle: Text('${item.city} · ${item.phone}'),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: _actions(notifier, item, manage: manage, restore: restore, hard: hard),
-                    ),
-                    onTap: () => context.push('/workshops/${item.id}'),
+                return RecordCard(
+                  selected: notifier.selected.contains(item.id),
+                  onSelected: (_) => notifier.toggleSelection(item.id),
+                  title: item.name,
+                  subtitle: '${item.city} · ${item.phone}',
+                  onTap: () => context.push('/workshops/${item.id}'),
+                  actions: _actions(
+                    notifier,
+                    item,
+                    manage: manage,
+                    restore: restore,
+                    hard: hard,
                   ),
                 );
               },
@@ -140,15 +162,39 @@ class _WorkshopListScreenState extends State<WorkshopListScreen> {
               sortField: q.sortField,
               sortAscending: q.sortAscending,
               onSort: (field) => _navigate(
-                q.copyWith(sortField: field, sortAscending: field == q.sortField ? !q.sortAscending : true),
+                q.copyWith(
+                  sortField: field,
+                  sortAscending: field == q.sortField ? !q.sortAscending : true,
+                ),
               ),
               columns: [
-                TableColumnSpec(label: 'Название', sortField: 'name', build: (item) => Text(item.name)),
-                TableColumnSpec(label: 'Город', sortField: 'city', build: (item) => Text(item.city)),
-                TableColumnSpec(label: 'Телефон', sortField: 'phone', build: (item) => Text(item.phone)),
-                TableColumnSpec(label: 'Вкусы', build: (item) => Text(flavorLabel(item))),
+                TableColumnSpec(
+                  label: 'Название',
+                  sortField: 'name',
+                  build: (item) => Text(item.name),
+                ),
+                TableColumnSpec(
+                  label: 'Город',
+                  sortField: 'city',
+                  build: (item) => Text(item.city),
+                ),
+                TableColumnSpec(
+                  label: 'Телефон',
+                  sortField: 'phone',
+                  build: (item) => Text(item.phone),
+                ),
+                TableColumnSpec(
+                  label: 'Вкусы',
+                  build: (item) => Text(flavorLabel(item)),
+                ),
               ],
-              actions: (item) => _actions(notifier, item, manage: manage, restore: restore, hard: hard),
+              actions: (item) => _actions(
+                notifier,
+                item,
+                manage: manage,
+                restore: restore,
+                hard: hard,
+              ),
             ),
     );
   }
@@ -172,8 +218,10 @@ class _WorkshopListScreenState extends State<WorkshopListScreen> {
         await notifier.restoreOne(item.id);
         _navigate(notifier.query);
       }),
-      onSoftDelete: () => _guarded(() => notifier.softDeleteOne(item.id), notifier),
-      onHardDelete: () => _guarded(() => notifier.hardDeleteOne(item.id), notifier),
+      onSoftDelete: () =>
+          _guarded(() => notifier.softDeleteOne(item.id), notifier),
+      onHardDelete: () =>
+          _guarded(() => notifier.hardDeleteOne(item.id), notifier),
     );
   }
 }

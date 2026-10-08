@@ -25,6 +25,7 @@ class ProductDetailScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text('Изделие #$productId'),
         leading: IconButton(
+          tooltip: 'Назад',
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
@@ -43,7 +44,10 @@ class ProductDetailScreen extends StatelessWidget {
                 children: [
                   const Text('Изделие не найдено'),
                   const SizedBox(height: 12),
-                  FilledButton(onPressed: () => context.go('/products'), child: const Text('К каталогу')),
+                  FilledButton(
+                    onPressed: () => context.go('/products'),
+                    child: const Text('К каталогу'),
+                  ),
                 ],
               ),
             );
@@ -71,7 +75,9 @@ class ProductDetailScreen extends StatelessWidget {
               .join(', ');
           var workshopLabel = '—';
           for (final workshop in workshops) {
-            if (workshop.id == product.workshopId) workshopLabel = workshop.name;
+            if (workshop.id == product.workshopId) {
+              workshopLabel = workshop.name;
+            }
           }
 
           return Center(
@@ -80,43 +86,68 @@ class ProductDetailScreen extends StatelessWidget {
               child: ListView(
                 padding: const EdgeInsets.all(24),
                 children: [
-                  Text(product.name, style: Theme.of(context).textTheme.headlineSmall),
+                  Text(
+                    product.name,
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
                   const SizedBox(height: 16),
                   _row('Артикул', product.sku),
-                  _row('Категория', references.categoryName(product.categoryId)),
+                  _row(
+                    'Категория',
+                    references.categoryName(product.categoryId),
+                  ),
                   _row('Цех', workshopLabel),
                   _row('Вкусы', flavorLabel.isEmpty ? '—' : flavorLabel),
                   _row('Год в ассортименте', '${product.year}'),
                   _row('Масса', '${product.weightGrams} г'),
                   _row('Кондитеры', confectionerNames),
-                  _row('Остаток', '${product.stockAvailable} из ${product.stockTotal}'),
-                  if (product.isDeleted) _row('Статус', 'Удалено ${product.deletedAt}'),
+                  _row(
+                    'Остаток',
+                    '${product.stockAvailable} из ${product.stockTotal}',
+                  ),
+                  if (product.isDeleted)
+                    _row('Статус', 'Удалено ${product.deletedAt}'),
                   const SizedBox(height: 24),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
                     children: [
-                      if (context.watch<AuthNotifier>().allows(AppAction.manageCatalog))
+                      if (context.watch<AuthNotifier>().allows(
+                        AppAction.manageCatalog,
+                      ))
                         FilledButton(
-                          onPressed: () => context.push('/products/${product.id}/edit'),
+                          onPressed: () =>
+                              context.push('/products/${product.id}/edit'),
                           child: const Text('Изменить'),
                         ),
-                      FilledButton(onPressed: () => context.go('/products'), child: const Text('К каталогу')),
-                      if (product.isDeleted && context.watch<AuthNotifier>().allows(AppAction.restore))
+                      FilledButton(
+                        onPressed: () => context.go('/products'),
+                        child: const Text('К каталогу'),
+                      ),
+                      if (product.isDeleted &&
+                          context.watch<AuthNotifier>().allows(
+                            AppAction.restore,
+                          ))
                         FilledButton.tonal(
                           onPressed: () => _restore(context, product.id),
                           child: const Text('Восстановить'),
                         )
                       else if (!product.isDeleted) ...[
-                        if (context.watch<AuthNotifier>().allows(AppAction.manageCatalog))
+                        if (context.watch<AuthNotifier>().allows(
+                          AppAction.manageCatalog,
+                        ))
                           FilledButton.tonal(
                             onPressed: () => _softDelete(context, product.id),
                             child: const Text('Скрыть (логически)'),
                           ),
-                        if (context.watch<AuthNotifier>().allows(AppAction.hardDelete))
+                        if (context.watch<AuthNotifier>().allows(
+                          AppAction.hardDelete,
+                        ))
                           FilledButton(
                             style: FilledButton.styleFrom(
-                              backgroundColor: Theme.of(context).colorScheme.error,
+                              backgroundColor: Theme.of(context)
+                                  .colorScheme
+                                  .error,
                             ),
                             onPressed: () => _hardDelete(context, product.id),
                             child: const Text('Удалить навсегда'),
@@ -163,7 +194,13 @@ class ProductDetailScreen extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(width: 160, child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600))),
+          SizedBox(
+            width: 160,
+            child: Text(
+              label,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
           Expanded(child: Text(value)),
         ],
       ),

@@ -15,7 +15,11 @@ class _ScriptedAdapter implements HttpClientAdapter {
   final Future<ResponseBody> Function(RequestOptions options) respond;
 
   @override
-  Future<ResponseBody> fetch(RequestOptions options, Stream<Uint8List>? requestStream, Future<void>? cancelFuture) {
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) {
     return respond(options);
   }
 
@@ -56,34 +60,36 @@ void main() {
 
   test('find reads one server page and keeps the query', () async {
     RequestOptions? seen;
-    final repo = ApiProductRepository(_dio((options) async {
-      seen = options;
-      return _json(200, {
-        'items': [
-          {
-            'id': 20,
-            'name': 'Торт «Прага»',
-            'sku': 'NYM-020',
-            'year': 2019,
-            'weightGrams': 1000,
-            'category': {'id': 1, 'name': 'Торты'},
-            'workshop': {'id': 1, 'name': 'Цех тортов'},
-            'confectioners': [
-              {'id': 1, 'fullName': 'Иванова Мария'},
-            ],
-            'flavors': [
-              {'id': 1, 'name': 'Шоколад'},
-            ],
-            'stockTotal': 22,
-            'stockAvailable': 9,
-            'deletedAt': null,
-          },
-        ],
-        'page': 2,
-        'size': 10,
-        'total': 30,
-      });
-    }));
+    final repo = ApiProductRepository(
+      _dio((options) async {
+        seen = options;
+        return _json(200, {
+          'items': [
+            {
+              'id': 20,
+              'name': 'Торт «Прага»',
+              'sku': 'NYM-020',
+              'year': 2019,
+              'weightGrams': 1000,
+              'category': {'id': 1, 'name': 'Торты'},
+              'workshop': {'id': 1, 'name': 'Цех тортов'},
+              'confectioners': [
+                {'id': 1, 'fullName': 'Иванова Мария'},
+              ],
+              'flavors': [
+                {'id': 1, 'name': 'Шоколад'},
+              ],
+              'stockTotal': 22,
+              'stockAvailable': 9,
+              'deletedAt': null,
+            },
+          ],
+          'page': 2,
+          'size': 10,
+          'total': 30,
+        });
+      }),
+    );
 
     final page = await repo.find(const ProductQuery(search: 'прага', page: 2));
 
@@ -100,21 +106,23 @@ void main() {
   });
 
   test('create returns the product assigned by the server', () async {
-    final repo = ApiProductRepository(_dio((options) async {
-      return _json(201, {
-        'id': 31,
-        'name': 'Прага',
-        'sku': 'NYM-031',
-        'year': 2019,
-        'weightGrams': 1000,
-        'categoryId': 1,
-        'workshopId': 1,
-        'confectionerIds': [1],
-        'flavorTagIds': [1],
-        'stockTotal': 22,
-        'stockAvailable': 9,
-      });
-    }));
+    final repo = ApiProductRepository(
+      _dio((options) async {
+        return _json(201, {
+          'id': 31,
+          'name': 'Прага',
+          'sku': 'NYM-031',
+          'year': 2019,
+          'weightGrams': 1000,
+          'categoryId': 1,
+          'workshopId': 1,
+          'confectionerIds': [1],
+          'flavorTagIds': [1],
+          'stockTotal': 22,
+          'stockAvailable': 9,
+        });
+      }),
+    );
 
     final created = await repo.create(draft.copyWith(sku: 'NYM-031'));
     expect(created.id, 31);
@@ -122,12 +130,14 @@ void main() {
   });
 
   test('http 422 becomes a field validation error', () async {
-    final repo = ApiProductRepository(_dio((options) async {
-      return _json(422, {
-        'message': 'Ошибка валидации',
-        'errors': {'sku': 'Изделие с таким артикулом уже существует'},
-      });
-    }));
+    final repo = ApiProductRepository(
+      _dio((options) async {
+        return _json(422, {
+          'message': 'Ошибка валидации',
+          'errors': {'sku': 'Изделие с таким артикулом уже существует'},
+        });
+      }),
+    );
 
     expect(
       () => repo.create(draft),
@@ -142,26 +152,39 @@ void main() {
   });
 
   test('unreachable server becomes NetworkException', () async {
-    final repo = ApiProductRepository(_dio((options) async {
-      throw DioException(
-        requestOptions: options,
-        type: DioExceptionType.connectionError,
-      );
-    }));
+    final repo = ApiProductRepository(
+      _dio((options) async {
+        throw DioException(
+          requestOptions: options,
+          type: DioExceptionType.connectionError,
+        );
+      }),
+    );
 
-    await expectLater(repo.find(const ProductQuery()), throwsA(isA<NetworkException>()));
+    await expectLater(
+      repo.find(const ProductQuery()),
+      throwsA(isA<NetworkException>()),
+    );
   });
 
   test('http 409 becomes ConflictException', () async {
-    final repo = ApiProductRepository(_dio((options) async {
-      return _json(409, {
-        'message': 'На выбранные цеха ссылаются изделия: 9. Сначала смените цех у этих записей.',
-      });
-    }));
+    final repo = ApiProductRepository(
+      _dio((options) async {
+        return _json(409, {
+          'message': 'На выбранные цеха ссылаются изделия: 9. Сначала смените цех у этих записей.',
+        });
+      }),
+    );
 
     expect(
       () => repo.hardDelete(1),
-      throwsA(isA<ConflictException>().having((error) => error.message, 'message', contains('изделия'))),
+      throwsA(
+        isA<ConflictException>().having(
+          (error) => error.message,
+          'message',
+          contains('изделия'),
+        ),
+      ),
     );
   });
 }

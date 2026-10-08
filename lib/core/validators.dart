@@ -26,12 +26,14 @@ class V {
 
   static Validator email() {
     final re = RegExp(r'^[\w.+-]+@[\w-]+\.[\w.-]+$');
-    return (value) => re.hasMatch(value?.trim() ?? '') ? null : 'Некорректный адрес почты';
+    return (value) =>
+        re.hasMatch(value?.trim() ?? '') ? null : 'Некорректный адрес почты';
   }
 
   static Validator phone() {
     final re = RegExp(r'^\+?[0-9][0-9\-\s]{9,16}$');
-    return (value) => re.hasMatch(value?.trim() ?? '') ? null : 'Некорректный телефон';
+    return (value) =>
+        re.hasMatch(value?.trim() ?? '') ? null : 'Некорректный телефон';
   }
 
   static Validator date() {

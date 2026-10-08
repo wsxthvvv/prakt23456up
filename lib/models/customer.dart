@@ -45,20 +45,25 @@ class Customer {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'lastName': lastName,
-        'firstName': firstName,
-        'email': email,
-        'phone': phone,
-        'loyaltyCard': loyaltyCard.toJson(),
-        'deletedAt': deletedAt?.toIso8601String(),
-      };
+    'id': id,
+    'lastName': lastName,
+    'firstName': firstName,
+    'email': email,
+    'phone': phone,
+    'loyaltyCard': loyaltyCard.toJson(),
+    'deletedAt': deletedAt?.toIso8601String(),
+  };
 
   factory Customer.fromJson(Map<String, dynamic> json) {
     final rawCard = json['loyaltyCard'];
     final card = rawCard is Map
         ? LoyaltyCard.fromJson(Map<String, dynamic>.from(rawCard))
-        : const LoyaltyCard(number: '', issuedOn: '', discountPercent: 0, active: false);
+        : const LoyaltyCard(
+            number: '',
+            issuedOn: '',
+            discountPercent: 0,
+            active: false,
+          );
     return Customer(
       id: jsonInt(json['id']),
       lastName: jsonString(json['lastName']),

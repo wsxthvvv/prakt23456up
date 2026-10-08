@@ -28,7 +28,12 @@ class CustomerDetailScreen extends StatelessWidget {
           }
           final item = snapshot.data;
           if (item == null) {
-            return Center(child: FilledButton(onPressed: () => context.go('/customers'), child: const Text('К списку')));
+            return Center(
+              child: FilledButton(
+                onPressed: () => context.go('/customers'),
+                child: const Text('К списку'),
+              ),
+            );
           }
           final card = item.loyaltyCard;
           return Center(
@@ -37,7 +42,10 @@ class CustomerDetailScreen extends StatelessWidget {
               child: ListView(
                 padding: const EdgeInsets.all(24),
                 children: [
-                  Text(item.fullName, style: Theme.of(context).textTheme.headlineSmall),
+                  Text(
+                    item.fullName,
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
                   const SizedBox(height: 12),
                   Text('Почта: ${item.email}'),
                   Text('Телефон: ${item.phone}'),
@@ -45,24 +53,52 @@ class CustomerDetailScreen extends StatelessWidget {
                   Text('Карта: ${card.number}'),
                   Text('Выдана: ${card.issuedOn}'),
                   Text('Скидка: ${card.discountPercent}%'),
-                  Text('Статус карты: ${card.active ? 'активна' : 'неактивна'}'),
+                  Text(
+                    'Статус карты: ${card.active ? 'активна' : 'неактивна'}',
+                  ),
                   if (item.isDeleted) Text('Удалён: ${item.deletedAt}'),
                   const SizedBox(height: 24),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
                     children: [
-                      if (context.watch<AuthNotifier>().allows(AppAction.manageCustomers))
-                        FilledButton(onPressed: () => context.push('/customers/${item.id}/edit'), child: const Text('Изменить')),
-                      FilledButton(onPressed: () => context.go('/customers'), child: const Text('К списку')),
-                      if (item.isDeleted && context.watch<AuthNotifier>().allows(AppAction.restore))
-                        FilledButton.tonal(onPressed: () => _restore(context, item.id), child: const Text('Восстановить'))
+                      if (context.watch<AuthNotifier>().allows(
+                        AppAction.manageCustomers,
+                      ))
+                        FilledButton(
+                          onPressed: () =>
+                              context.push('/customers/${item.id}/edit'),
+                          child: const Text('Изменить'),
+                        ),
+                      FilledButton(
+                        onPressed: () => context.go('/customers'),
+                        child: const Text('К списку'),
+                      ),
+                      if (item.isDeleted &&
+                          context.watch<AuthNotifier>().allows(
+                            AppAction.restore,
+                          ))
+                        FilledButton.tonal(
+                          onPressed: () => _restore(context, item.id),
+                          child: const Text('Восстановить'),
+                        )
                       else if (!item.isDeleted) ...[
-                        if (context.watch<AuthNotifier>().allows(AppAction.manageCustomers))
-                          FilledButton.tonal(onPressed: () => _soft(context, item.id), child: const Text('Скрыть')),
-                        if (context.watch<AuthNotifier>().allows(AppAction.hardDelete))
+                        if (context.watch<AuthNotifier>().allows(
+                          AppAction.manageCustomers,
+                        ))
+                          FilledButton.tonal(
+                            onPressed: () => _soft(context, item.id),
+                            child: const Text('Скрыть'),
+                          ),
+                        if (context.watch<AuthNotifier>().allows(
+                          AppAction.hardDelete,
+                        ))
                           FilledButton(
-                            style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: Theme.of(context)
+                                  .colorScheme
+                                  .error,
+                            ),
                             onPressed: () => _hard(context, item.id),
                             child: const Text('Удалить навсегда'),
                           ),

@@ -25,14 +25,25 @@ List<int> jsonIntList(Object? value) {
   return [for (final item in value) jsonInt(item)];
 }
 
-int jsonRelationId(Map<String, dynamic> json, String idKey, String objectKey, [int fallback = 0]) {
+int jsonRelationId(
+  Map<String, dynamic> json,
+  String idKey,
+  String objectKey, [
+  int fallback = 0,
+]) {
   final nested = json[objectKey];
-  if (nested is Map && nested['id'] != null) return jsonInt(nested['id'], fallback);
+  if (nested is Map && nested['id'] != null) {
+    return jsonInt(nested['id'], fallback);
+  }
   if (json[idKey] != null) return jsonInt(json[idKey], fallback);
   return fallback;
 }
 
-List<int> jsonRelationIds(Map<String, dynamic> json, String idsKey, String objectsKey) {
+List<int> jsonRelationIds(
+  Map<String, dynamic> json,
+  String idsKey,
+  String objectsKey,
+) {
   final nested = json[objectsKey];
   if (nested is List && nested.any((item) => item is Map)) {
     return [

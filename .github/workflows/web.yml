@@ -1,0 +1,32 @@
+name: publish
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter pub get
+      - name: Release build
+        env:
+          API_BASE_URL: ${{ vars.API_BASE_URL }}
+        run: |
+          args="--release --base-href /prakt23456up/"
+          if [ -n "$API_BASE_URL" ]; then
+            args="$args --dart-define=API_BASE_URL=$API_BASE_URL"
+          fi
+          flutter build web $args
+          cp build/web/index.html build/web/404.html
+      - uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build/web

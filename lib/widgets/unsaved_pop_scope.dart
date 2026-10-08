@@ -25,8 +25,14 @@ class _UnsavedPopScopeState extends State<UnsavedPopScope> {
             title: const Text('Есть несохранённые изменения'),
             content: const Text('Уйти с формы и потерять введённые данные?'),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Остаться')),
-              FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Уйти')),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Остаться'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('Уйти'),
+              ),
             ],
           ),
         );

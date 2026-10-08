@@ -76,10 +76,13 @@ Future<void> main() async {
         Provider<CustomerRepository>.value(value: customers),
         Provider<ReferenceRepository>.value(value: references),
         ChangeNotifierProvider(
-          create: (context) => ProductListNotifier(context.read<ProductRepository>())..load(),
+          create: (context) =>
+              ProductListNotifier(context.read<ProductRepository>())..load(),
         ),
         ChangeNotifierProvider(
-          create: (context) => ConfectionerListNotifier(context.read<ConfectionerRepository>())..load(),
+          create: (context) =>
+              ConfectionerListNotifier(context.read<ConfectionerRepository>())
+                ..load(),
         ),
         ChangeNotifierProvider<CatalogNotifier<Flavor, FlavorQuery>>(
           create: (context) {
@@ -121,13 +124,20 @@ Future<void> main() async {
           },
         ),
       ],
-      child: NyamkaApp(router: buildRouter(auth, navigatorKey: navigatorKey), navigatorKey: navigatorKey),
+      child: NyamkaApp(
+        router: buildRouter(auth, navigatorKey: navigatorKey),
+        navigatorKey: navigatorKey,
+      ),
     ),
   );
 }
 
 class NyamkaApp extends StatelessWidget {
-  const NyamkaApp({super.key, required this.router, required this.navigatorKey});
+  const NyamkaApp({
+    super.key,
+    required this.router,
+    required this.navigatorKey,
+  });
 
   final GoRouter router;
   final GlobalKey<NavigatorState> navigatorKey;

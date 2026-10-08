@@ -8,13 +8,13 @@ import 'remote_collection.dart';
 
 class ApiConfectionerRepository implements ConfectionerRepository {
   ApiConfectionerRepository(Dio dio)
-      : _remote = RemoteCollection<Confectioner>(
-          dio: dio,
-          resource: 'confectioners',
-          decode: Confectioner.fromJson,
-          encode: _write,
-          idOf: (item) => item.id,
-        );
+    : _remote = RemoteCollection<Confectioner>(
+        dio: dio,
+        resource: 'confectioners',
+        decode: Confectioner.fromJson,
+        encode: _write,
+        idOf: (item) => item.id,
+      );
 
   final RemoteCollection<Confectioner> _remote;
 
@@ -40,10 +40,12 @@ class ApiConfectionerRepository implements ConfectionerRepository {
   Future<Confectioner?> findById(int id) => _remote.findById(id);
 
   @override
-  Future<Confectioner> create(Confectioner confectioner) => _remote.create(confectioner);
+  Future<Confectioner> create(Confectioner confectioner) =>
+      _remote.create(confectioner);
 
   @override
-  Future<Confectioner> update(Confectioner confectioner) => _remote.update(confectioner);
+  Future<Confectioner> update(Confectioner confectioner) =>
+      _remote.update(confectioner);
 
   @override
   Future<void> softDelete(int id) => _remote.softDelete(id);
@@ -59,9 +61,9 @@ class ApiConfectionerRepository implements ConfectionerRepository {
 }
 
 Map<String, dynamic> _write(Confectioner item) => {
-      'lastName': item.lastName,
-      'firstName': item.firstName,
-      'country': item.country,
-      'specialty': item.specialty,
-      'workshopId': item.workshopId,
-    };
+  'lastName': item.lastName,
+  'firstName': item.firstName,
+  'country': item.country,
+  'specialty': item.specialty,
+  'workshopId': item.workshopId,
+};

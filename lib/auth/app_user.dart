@@ -18,12 +18,12 @@ class AppUser {
   final AppRole role;
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'username': username,
-        'fullName': fullName,
-        'email': email,
-        'role': role.name,
-      };
+    'id': id,
+    'username': username,
+    'fullName': fullName,
+    'email': email,
+    'role': role.name,
+  };
 
   static AppUser? fromJson(Map<String, dynamic> json) {
     final role = roleByName(json['role'] as String?);

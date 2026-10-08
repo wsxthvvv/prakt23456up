@@ -28,7 +28,12 @@ class FlavorDetailScreen extends StatelessWidget {
           }
           final item = snapshot.data;
           if (item == null) {
-            return Center(child: FilledButton(onPressed: () => context.go('/flavors'), child: const Text('К списку')));
+            return Center(
+              child: FilledButton(
+                onPressed: () => context.go('/flavors'),
+                child: const Text('К списку'),
+              ),
+            );
           }
           return Center(
             child: ConstrainedBox(
@@ -36,7 +41,10 @@ class FlavorDetailScreen extends StatelessWidget {
               child: ListView(
                 padding: const EdgeInsets.all(24),
                 children: [
-                  Text(item.name, style: Theme.of(context).textTheme.headlineSmall),
+                  Text(
+                    item.name,
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
                   const SizedBox(height: 12),
                   Text('Описание: ${item.description}'),
                   Text('Интенсивность: ${item.intensity}'),
@@ -46,17 +54,43 @@ class FlavorDetailScreen extends StatelessWidget {
                     spacing: 8,
                     runSpacing: 8,
                     children: [
-                      if (context.watch<AuthNotifier>().allows(AppAction.manageCatalog))
-                        FilledButton(onPressed: () => context.push('/flavors/${item.id}/edit'), child: const Text('Изменить')),
-                      FilledButton(onPressed: () => context.go('/flavors'), child: const Text('К списку')),
-                      if (item.isDeleted && context.watch<AuthNotifier>().allows(AppAction.restore))
-                        FilledButton.tonal(onPressed: () => _restore(context, item.id), child: const Text('Восстановить'))
+                      if (context.watch<AuthNotifier>().allows(
+                        AppAction.manageCatalog,
+                      ))
+                        FilledButton(
+                          onPressed: () =>
+                              context.push('/flavors/${item.id}/edit'),
+                          child: const Text('Изменить'),
+                        ),
+                      FilledButton(
+                        onPressed: () => context.go('/flavors'),
+                        child: const Text('К списку'),
+                      ),
+                      if (item.isDeleted &&
+                          context.watch<AuthNotifier>().allows(
+                            AppAction.restore,
+                          ))
+                        FilledButton.tonal(
+                          onPressed: () => _restore(context, item.id),
+                          child: const Text('Восстановить'),
+                        )
                       else if (!item.isDeleted) ...[
-                        if (context.watch<AuthNotifier>().allows(AppAction.manageCatalog))
-                          FilledButton.tonal(onPressed: () => _soft(context, item.id), child: const Text('Скрыть')),
-                        if (context.watch<AuthNotifier>().allows(AppAction.hardDelete))
+                        if (context.watch<AuthNotifier>().allows(
+                          AppAction.manageCatalog,
+                        ))
+                          FilledButton.tonal(
+                            onPressed: () => _soft(context, item.id),
+                            child: const Text('Скрыть'),
+                          ),
+                        if (context.watch<AuthNotifier>().allows(
+                          AppAction.hardDelete,
+                        ))
                           FilledButton(
-                            style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: Theme.of(context)
+                                  .colorScheme
+                                  .error,
+                            ),
                             onPressed: () => _hard(context, item.id),
                             child: const Text('Удалить навсегда'),
                           ),

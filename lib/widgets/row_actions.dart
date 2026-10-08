@@ -13,10 +13,23 @@ List<Widget> rowActions({
   bool canHardDelete = true,
 }) {
   return [
-    IconButton(tooltip: 'Карточка', onPressed: onOpen, icon: const Icon(Icons.open_in_new)),
-    if (canEdit) IconButton(tooltip: 'Изменить', onPressed: onEdit, icon: const Icon(Icons.edit_outlined)),
+    IconButton(
+      tooltip: 'Карточка',
+      onPressed: onOpen,
+      icon: const Icon(Icons.open_in_new),
+    ),
+    if (canEdit)
+      IconButton(
+        tooltip: 'Изменить',
+        onPressed: onEdit,
+        icon: const Icon(Icons.edit_outlined),
+      ),
     if (deleted && canRestore)
-      IconButton(tooltip: 'Восстановить', onPressed: onRestore, icon: const Icon(Icons.restore))
+      IconButton(
+        tooltip: 'Восстановить',
+        onPressed: onRestore,
+        icon: const Icon(Icons.restore),
+      )
     else if (!deleted) ...[
       if (canSoftDelete)
         IconButton(
@@ -25,7 +38,11 @@ List<Widget> rowActions({
           icon: const Icon(Icons.delete_outline),
         ),
       if (canHardDelete)
-        IconButton(tooltip: 'Удалить навсегда', onPressed: onHardDelete, icon: const Icon(Icons.delete_forever)),
+        IconButton(
+          tooltip: 'Удалить навсегда',
+          onPressed: onHardDelete,
+          icon: const Icon(Icons.delete_forever),
+        ),
     ],
   ];
 }

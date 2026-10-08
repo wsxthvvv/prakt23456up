@@ -69,7 +69,8 @@ class _ConfectionerFormScreenState extends State<ConfectionerFormScreen> {
     setState(() => _ready = true);
   }
 
-  String _snapshot() => '${_lastName.text}|${_firstName.text}|$_country|$_specialty|$_workshopId';
+  String _snapshot() =>
+      '${_lastName.text}|${_firstName.text}|$_country|$_specialty|$_workshopId';
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
@@ -97,7 +98,8 @@ class _ConfectionerFormScreenState extends State<ConfectionerFormScreen> {
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() => _saving = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.message)));
     }
   }
 
@@ -107,26 +109,41 @@ class _ConfectionerFormScreenState extends State<ConfectionerFormScreen> {
       return Scaffold(
         appBar: AppBar(title: const Text('Кондитер')),
         body: Center(
-          child: FilledButton(onPressed: () => context.go('/confectioners'), child: const Text('К списку')),
+          child: FilledButton(
+            onPressed: () => context.go('/confectioners'),
+            child: const Text('К списку'),
+          ),
         ),
       );
     }
-    if (!_ready) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (!_ready) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
 
     final references = context.watch<ReferenceRepository>();
-    final workshops = context.watch<WorkshopRepository>().all.where((w) => !w.isDeleted || w.id == _workshopId).toList();
+    final workshops = context
+        .watch<WorkshopRepository>()
+        .all
+        .where((w) => !w.isDeleted || w.id == _workshopId)
+        .toList();
     final fields = [
       TextFieldSpec(
         label: 'Фамилия',
         controller: _lastName,
         onChanged: (_) => setState(() {}),
-        validator: V.combine([V.required('Укажите фамилию'), V.length(min: 2, max: 60)]),
+        validator: V.combine([
+          V.required('Укажите фамилию'),
+          V.length(min: 2, max: 60),
+        ]),
       ),
       TextFieldSpec(
         label: 'Имя',
         controller: _firstName,
         onChanged: (_) => setState(() {}),
-        validator: V.combine([V.required('Укажите имя'), V.length(min: 2, max: 60)]),
+        validator: V.combine([
+          V.required('Укажите имя'),
+          V.length(min: 2, max: 60),
+        ]),
       ),
     ];
 

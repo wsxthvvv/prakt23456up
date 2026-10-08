@@ -47,7 +47,12 @@ String productQueryToLocation(ProductQuery q) {
   if (pairs.isEmpty) return buffer.toString();
   buffer.write('?');
   buffer.write(
-    pairs.entries.map((e) => '${Uri.encodeQueryComponent(e.key)}=${Uri.encodeQueryComponent(e.value)}').join('&'),
+    pairs.entries
+        .map(
+          (e) =>
+              '${Uri.encodeQueryComponent(e.key)}=${Uri.encodeQueryComponent(e.value)}',
+        )
+        .join('&'),
   );
   return buffer.toString();
 }
@@ -82,7 +87,9 @@ String confectionerQueryToLocation(ConfectionerQuery q) {
 
   if (q.search.isNotEmpty) pairs['search'] = q.search;
   if (q.country != null && q.country!.isNotEmpty) pairs['country'] = q.country!;
-  if (q.specialty != null && q.specialty!.isNotEmpty) pairs['specialty'] = q.specialty!;
+  if (q.specialty != null && q.specialty!.isNotEmpty) {
+    pairs['specialty'] = q.specialty!;
+  }
   pairs['sort'] = q.sortAscending ? q.sortField : '${q.sortField},desc';
   if (q.page != 1) pairs['page'] = '${q.page}';
   if (q.size != 10) pairs['size'] = '${q.size}';
@@ -91,7 +98,12 @@ String confectionerQueryToLocation(ConfectionerQuery q) {
   if (pairs.isEmpty) return buffer.toString();
   buffer.write('?');
   buffer.write(
-    pairs.entries.map((e) => '${Uri.encodeQueryComponent(e.key)}=${Uri.encodeQueryComponent(e.value)}').join('&'),
+    pairs.entries
+        .map(
+          (e) =>
+              '${Uri.encodeQueryComponent(e.key)}=${Uri.encodeQueryComponent(e.value)}',
+        )
+        .join('&'),
   );
   return buffer.toString();
 }
@@ -113,7 +125,10 @@ int? _intOrNull(String? raw) {
 String _location(String path, Map<String, String> pairs) {
   if (pairs.isEmpty) return path;
   final query = pairs.entries
-      .map((e) => '${Uri.encodeQueryComponent(e.key)}=${Uri.encodeQueryComponent(e.value)}')
+      .map(
+        (e) =>
+            '${Uri.encodeQueryComponent(e.key)}=${Uri.encodeQueryComponent(e.value)}',
+      )
       .join('&');
   return '$path?$query';
 }

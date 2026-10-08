@@ -52,7 +52,9 @@ class InMemoryFlavorRepository implements FlavorRepository {
       final needle = q.search.trim().toLowerCase();
       rows = rows
           .where(
-            (f) => f.name.toLowerCase().contains(needle) || f.description.toLowerCase().contains(needle),
+            (f) =>
+                f.name.toLowerCase().contains(needle) ||
+                f.description.toLowerCase().contains(needle),
           )
           .toList();
     }
@@ -62,7 +64,9 @@ class InMemoryFlavorRepository implements FlavorRepository {
     rows.sort((a, b) {
       final result = switch (q.sortField) {
         'intensity' => a.intensity.compareTo(b.intensity),
-        'description' => a.description.toLowerCase().compareTo(b.description.toLowerCase()),
+        'description' => a.description.toLowerCase().compareTo(
+          b.description.toLowerCase(),
+        ),
         _ => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
       };
       return q.sortAscending ? result : -result;

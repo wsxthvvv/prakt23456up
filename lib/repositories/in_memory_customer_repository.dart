@@ -43,7 +43,9 @@ class InMemoryCustomerRepository implements CustomerRepository {
   @override
   bool emailExists(String email, {int? exceptId}) {
     final needle = email.trim().toLowerCase();
-    return _items.any((c) => c.id != exceptId && c.email.trim().toLowerCase() == needle);
+    return _items.any(
+      (c) => c.id != exceptId && c.email.trim().toLowerCase() == needle,
+    );
   }
 
   @override
@@ -70,9 +72,13 @@ class InMemoryCustomerRepository implements CustomerRepository {
     }
     rows.sort((a, b) {
       final result = switch (q.sortField) {
-        'firstName' => a.firstName.toLowerCase().compareTo(b.firstName.toLowerCase()),
+        'firstName' => a.firstName.toLowerCase().compareTo(
+          b.firstName.toLowerCase(),
+        ),
         'email' => a.email.toLowerCase().compareTo(b.email.toLowerCase()),
-        'discount' => a.loyaltyCard.discountPercent.compareTo(b.loyaltyCard.discountPercent),
+        'discount' => a.loyaltyCard.discountPercent.compareTo(
+          b.loyaltyCard.discountPercent,
+        ),
         _ => a.lastName.toLowerCase().compareTo(b.lastName.toLowerCase()),
       };
       return q.sortAscending ? result : -result;

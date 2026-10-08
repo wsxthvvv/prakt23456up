@@ -21,7 +21,11 @@ class ConfectionerDetailScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('Кондитер #$confectionerId'),
-        leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop()),
+        leading: IconButton(
+          tooltip: 'Назад',
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
+        ),
       ),
       body: FutureBuilder<Confectioner?>(
         future: context.read<ConfectionerRepository>().findById(confectionerId),
@@ -32,7 +36,10 @@ class ConfectionerDetailScreen extends StatelessWidget {
           final c = snapshot.data;
           if (c == null) {
             return Center(
-              child: FilledButton(onPressed: () => context.go('/confectioners'), child: const Text('К списку')),
+              child: FilledButton(
+                onPressed: () => context.go('/confectioners'),
+                child: const Text('К списку'),
+              ),
             );
           }
           return Center(
@@ -41,7 +48,10 @@ class ConfectionerDetailScreen extends StatelessWidget {
               child: ListView(
                 padding: const EdgeInsets.all(24),
                 children: [
-                  Text(c.fullName, style: Theme.of(context).textTheme.headlineSmall),
+                  Text(
+                    c.fullName,
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
                   const SizedBox(height: 12),
                   Text('Страна: ${c.country}'),
                   Text('Специализация: ${c.specialty}'),
@@ -51,27 +61,42 @@ class ConfectionerDetailScreen extends StatelessWidget {
                   Wrap(
                     spacing: 8,
                     children: [
-                      if (context.watch<AuthNotifier>().allows(AppAction.manageCatalog))
+                      if (context.watch<AuthNotifier>().allows(
+                        AppAction.manageCatalog,
+                      ))
                         FilledButton(
-                          onPressed: () => context.push('/confectioners/${c.id}/edit'),
+                          onPressed: () =>
+                              context.push('/confectioners/${c.id}/edit'),
                           child: const Text('Изменить'),
                         ),
-                      FilledButton(onPressed: () => context.go('/confectioners'), child: const Text('К списку')),
-                      if (c.isDeleted && context.watch<AuthNotifier>().allows(AppAction.restore))
+                      FilledButton(
+                        onPressed: () => context.go('/confectioners'),
+                        child: const Text('К списку'),
+                      ),
+                      if (c.isDeleted &&
+                          context.watch<AuthNotifier>().allows(
+                            AppAction.restore,
+                          ))
                         FilledButton.tonal(
                           onPressed: () => _restore(context, c.id),
                           child: const Text('Восстановить'),
                         )
                       else if (!c.isDeleted) ...[
-                        if (context.watch<AuthNotifier>().allows(AppAction.manageCatalog))
+                        if (context.watch<AuthNotifier>().allows(
+                          AppAction.manageCatalog,
+                        ))
                           FilledButton.tonal(
                             onPressed: () => _softDelete(context, c.id),
                             child: const Text('Скрыть'),
                           ),
-                        if (context.watch<AuthNotifier>().allows(AppAction.hardDelete))
+                        if (context.watch<AuthNotifier>().allows(
+                          AppAction.hardDelete,
+                        ))
                           FilledButton(
                             style: FilledButton.styleFrom(
-                              backgroundColor: Theme.of(context).colorScheme.error,
+                              backgroundColor: Theme.of(context)
+                                  .colorScheme
+                                  .error,
                             ),
                             onPressed: () => _hardDelete(context, c.id),
                             child: const Text('Удалить навсегда'),
@@ -99,7 +124,9 @@ class ConfectionerDetailScreen extends StatelessWidget {
     final notifier = context.read<ConfectionerListNotifier>();
     await showFailure(context, () async {
       await notifier.softDeleteOne(id);
-      if (context.mounted) context.go(confectionerQueryToLocation(notifier.query));
+      if (context.mounted) {
+        context.go(confectionerQueryToLocation(notifier.query));
+      }
     });
   }
 
@@ -115,7 +142,9 @@ class ConfectionerDetailScreen extends StatelessWidget {
     final notifier = context.read<ConfectionerListNotifier>();
     await showFailure(context, () async {
       await notifier.restoreOne(id);
-      if (context.mounted) context.go(confectionerQueryToLocation(notifier.query));
+      if (context.mounted) {
+        context.go(confectionerQueryToLocation(notifier.query));
+      }
     });
   }
 }

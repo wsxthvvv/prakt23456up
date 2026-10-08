@@ -128,7 +128,8 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() => _saving = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.message)));
     }
   }
 
@@ -137,23 +138,36 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
     if (_missing) {
       return Scaffold(
         appBar: AppBar(title: const Text('Покупатель')),
-        body: Center(child: FilledButton(onPressed: () => context.go('/customers'), child: const Text('К списку'))),
+        body: Center(
+          child: FilledButton(
+            onPressed: () => context.go('/customers'),
+            child: const Text('К списку'),
+          ),
+        ),
       );
     }
-    if (!_ready) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (!_ready) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
 
     final person = [
       TextFieldSpec(
         label: 'Фамилия',
         controller: _lastName,
         onChanged: (_) => setState(() {}),
-        validator: V.combine([V.required('Укажите фамилию'), V.length(min: 2, max: 60)]),
+        validator: V.combine([
+          V.required('Укажите фамилию'),
+          V.length(min: 2, max: 60),
+        ]),
       ),
       TextFieldSpec(
         label: 'Имя',
         controller: _firstName,
         onChanged: (_) => setState(() {}),
-        validator: V.combine([V.required('Укажите имя'), V.length(min: 2, max: 60)]),
+        validator: V.combine([
+          V.required('Укажите имя'),
+          V.length(min: 2, max: 60),
+        ]),
       ),
       TextFieldSpec(
         label: 'Почта',
@@ -161,7 +175,9 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
         keyboardType: TextInputType.emailAddress,
         onChanged: _touchEmail,
         validator: (value) {
-          final local = V.combine([V.required('Укажите почту'), V.email()])(value);
+          final local = V.combine([V.required('Укажите почту'), V.email()])(
+            value,
+          );
           return local ?? _emailError;
         },
       ),
@@ -194,7 +210,10 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
         controller: _discount,
         keyboardType: TextInputType.number,
         onChanged: (_) => setState(() {}),
-        validator: V.combine([V.required('Укажите скидку'), V.integer(min: 0, max: 50)]),
+        validator: V.combine([
+          V.required('Укажите скидку'),
+          V.integer(min: 0, max: 50),
+        ]),
       ),
     ];
 

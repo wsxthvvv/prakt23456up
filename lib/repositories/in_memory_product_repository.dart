@@ -34,11 +34,14 @@ class InMemoryProductRepository implements ProductRepository {
   @override
   bool skuExists(String sku, {int? exceptId}) {
     final needle = sku.trim().toLowerCase();
-    return _products.any((p) => p.id != exceptId && p.sku.trim().toLowerCase() == needle);
+    return _products.any(
+      (p) => p.id != exceptId && p.sku.trim().toLowerCase() == needle,
+    );
   }
 
   @override
-  int countByWorkshop(int workshopId) => _products.where((p) => p.workshopId == workshopId).length;
+  int countByWorkshop(int workshopId) =>
+      _products.where((p) => p.workshopId == workshopId).length;
 
   @override
   Future<PageResult<Product>> find(ProductQuery q) async {
@@ -48,13 +51,17 @@ class InMemoryProductRepository implements ProductRepository {
       throw StateError('Демонстрационная ошибка загрузки каталога');
     }
 
-    var rows = _products.where((p) => q.includeDeleted || !p.isDeleted).toList();
+    var rows = _products
+        .where((p) => q.includeDeleted || !p.isDeleted)
+        .toList();
 
     if (q.search.trim().isNotEmpty) {
       final needle = q.search.trim().toLowerCase();
       rows = rows
           .where(
-            (p) => p.name.toLowerCase().contains(needle) || p.sku.toLowerCase().contains(needle),
+            (p) =>
+                p.name.toLowerCase().contains(needle) ||
+                p.sku.toLowerCase().contains(needle),
           )
           .toList();
     }

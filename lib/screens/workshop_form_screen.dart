@@ -68,7 +68,8 @@ class _WorkshopFormScreenState extends State<WorkshopFormScreen> {
     setState(() => _ready = true);
   }
 
-  String _snapshot() => '${_name.text}|${_city.text}|${_phone.text}|${_flavorIds.join(',')}';
+  String _snapshot() =>
+      '${_name.text}|${_city.text}|${_phone.text}|${_flavorIds.join(',')}';
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
@@ -95,7 +96,8 @@ class _WorkshopFormScreenState extends State<WorkshopFormScreen> {
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() => _saving = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.message)));
     }
   }
 
@@ -104,23 +106,40 @@ class _WorkshopFormScreenState extends State<WorkshopFormScreen> {
     if (_missing) {
       return Scaffold(
         appBar: AppBar(title: const Text('Цех')),
-        body: Center(child: FilledButton(onPressed: () => context.go('/workshops'), child: const Text('К списку'))),
+        body: Center(
+          child: FilledButton(
+            onPressed: () => context.go('/workshops'),
+            child: const Text('К списку'),
+          ),
+        ),
       );
     }
-    if (!_ready) return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    final flavors = context.watch<FlavorRepository>().all.where((f) => !f.isDeleted).toList();
+    if (!_ready) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    final flavors = context
+        .watch<FlavorRepository>()
+        .all
+        .where((f) => !f.isDeleted)
+        .toList();
     final fields = [
       TextFieldSpec(
         label: 'Название',
         controller: _name,
         onChanged: (_) => setState(() {}),
-        validator: V.combine([V.required('Укажите название'), V.length(min: 2, max: 80)]),
+        validator: V.combine([
+          V.required('Укажите название'),
+          V.length(min: 2, max: 80),
+        ]),
       ),
       TextFieldSpec(
         label: 'Город',
         controller: _city,
         onChanged: (_) => setState(() {}),
-        validator: V.combine([V.required('Укажите город'), V.length(min: 2, max: 60)]),
+        validator: V.combine([
+          V.required('Укажите город'),
+          V.length(min: 2, max: 60),
+        ]),
       ),
       TextFieldSpec(
         label: 'Телефон',
@@ -143,9 +162,13 @@ class _WorkshopFormScreenState extends State<WorkshopFormScreen> {
           MultiIdField(
             label: 'Вкусы цеха',
             value: _flavorIds,
-            options: [for (final flavor in flavors) (id: flavor.id, label: flavor.name)],
+            options: [
+              for (final flavor in flavors) (id: flavor.id, label: flavor.name),
+            ],
             onChanged: (value) => setState(() => _flavorIds = value),
-            validator: (value) => (value == null || value.isEmpty) ? 'Выберите хотя бы один вкус' : null,
+            validator: (value) => (value == null || value.isEmpty)
+                ? 'Выберите хотя бы один вкус'
+                : null,
           ),
         ],
       ),

@@ -38,20 +38,20 @@ class Workshop {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'city': city,
-        'phone': phone,
-        'flavorIds': flavorIds,
-        'deletedAt': deletedAt?.toIso8601String(),
-      };
+    'id': id,
+    'name': name,
+    'city': city,
+    'phone': phone,
+    'flavorIds': flavorIds,
+    'deletedAt': deletedAt?.toIso8601String(),
+  };
 
   factory Workshop.fromJson(Map<String, dynamic> json) => Workshop(
-        id: jsonInt(json['id']),
-        name: jsonString(json['name']),
-        city: jsonString(json['city']),
-        phone: jsonString(json['phone']),
-        flavorIds: jsonRelationIds(json, 'flavorIds', 'flavors'),
-        deletedAt: jsonDate(json['deletedAt']),
-      );
+    id: jsonInt(json['id']),
+    name: jsonString(json['name']),
+    city: jsonString(json['city']),
+    phone: jsonString(json['phone']),
+    flavorIds: jsonRelationIds(json, 'flavorIds', 'flavors'),
+    deletedAt: jsonDate(json['deletedAt']),
+  );
 }

@@ -49,7 +49,8 @@ class AuthNotifier extends ChangeNotifier {
   String? get signedOutMessage {
     return switch (signedOutReason) {
       SessionEnd.inactive => 'Сессия завершена: 3 минуты не было действий.',
-      SessionEnd.absolute => 'Сессия завершена: превышено общее время работы (10 минут).',
+      SessionEnd.absolute =>
+        'Сессия завершена: превышено общее время работы (10 минут).',
       SessionEnd.refresh => 'Сессия завершена: не удалось обновить вход.',
       null => null,
     };
@@ -96,10 +97,12 @@ class AuthNotifier extends ChangeNotifier {
   }
 
   Future<void> login(String username, String password) {
-    return _open(() => _dio!.post('/auth/login', data: {
-          'username': username.trim(),
-          'password': password,
-        }));
+    return _open(
+      () => _dio!.post(
+        '/auth/login',
+        data: {'username': username.trim(), 'password': password},
+      ),
+    );
   }
 
   Future<void> register({
@@ -108,12 +111,17 @@ class AuthNotifier extends ChangeNotifier {
     required String email,
     required String fullName,
   }) async {
-    await guard(() => _dio!.post('/auth/register', data: {
+    await guard(
+      () => _dio!.post(
+        '/auth/register',
+        data: {
           'username': username.trim(),
           'password': password,
           'email': email.trim(),
           'fullName': fullName.trim(),
-        }));
+        },
+      ),
+    );
     await login(username, password);
   }
 
@@ -139,7 +147,9 @@ class AuthNotifier extends ChangeNotifier {
   Duration get inactivityLeft {
     final last = _lastActivityMs;
     if (last == null) return inactivityLimit;
-    final left = inactivityLimit - DateTime.now().difference(DateTime.fromMillisecondsSinceEpoch(last));
+    final left =
+        inactivityLimit -
+        DateTime.now().difference(DateTime.fromMillisecondsSinceEpoch(last));
     if (left.isNegative) return Duration.zero;
     return left;
   }
@@ -172,10 +182,14 @@ class AuthNotifier extends ChangeNotifier {
   }
 
   Future<void> _accept(dynamic data) async {
-    if (data is! Map || data['accessToken'] is! String || data['user'] is! Map) {
+    if (data is! Map ||
+        data['accessToken'] is! String ||
+        data['user'] is! Map) {
       throw const ServerException('Сервер не выдал токен доступа.');
     }
-    final user = AppUser.fromJson(Map<String, dynamic>.from(data['user'] as Map));
+    final user = AppUser.fromJson(
+      Map<String, dynamic>.from(data['user'] as Map),
+    );
     if (user == null) throw const ServerException('Сервер не сообщил роль.');
     _accessToken = data['accessToken'] as String;
     _refreshToken = data['refreshToken'] as String?;
@@ -185,7 +199,9 @@ class AuthNotifier extends ChangeNotifier {
     _lastActivityMs = now;
     signedOutReason = null;
     await _prefs.setString(_kAccess, _accessToken!);
-    if (_refreshToken != null) await _prefs.setString(_kRefresh, _refreshToken!);
+    if (_refreshToken != null) {
+      await _prefs.setString(_kRefresh, _refreshToken!);
+    }
     await _prefs.setString(_kProfile, jsonEncode(user.toJson()));
     await _prefs.setInt(_kStarted, now);
     await _prefs.setInt(_kActivity, now);
@@ -197,24 +213,36 @@ class AuthNotifier extends ChangeNotifier {
     final refresh = _refreshToken ?? _prefs.getString(_kRefresh);
     if (refresh == null || refresh.isEmpty || _dio == null) return false;
     try {
-      final response = await guard(() => _dio!.post('/auth/refresh', data: {'refreshToken': refresh}));
+      final response = await guard(
+        () => _dio!.post('/auth/refresh', data: {'refreshToken': refresh}),
+      );
       final data = response.data;
       if (data is! Map || data['accessToken'] is! String) return false;
       _accessToken = data['accessToken'] as String;
       _refreshToken = data['refreshToken'] as String?;
       await _prefs.setString(_kAccess, _accessToken!);
-      if (_refreshToken != null) await _prefs.setString(_kRefresh, _refreshToken!);
+      if (_refreshToken != null) {
+        await _prefs.setString(_kRefresh, _refreshToken!);
+      }
       return true;
     } catch (_) {
       return false;
     }
   }
 
+  @override
+  void dispose() {
+    _absolute?.cancel();
+    super.dispose();
+  }
+
   void _armAbsolute() {
     _absolute?.cancel();
     final started = _sessionStartedMs;
     if (started == null || _user == null) return;
-    final left = sessionLimit - DateTime.now().difference(DateTime.fromMillisecondsSinceEpoch(started));
+    final left =
+        sessionLimit -
+        DateTime.now().difference(DateTime.fromMillisecondsSinceEpoch(started));
     if (left <= Duration.zero) {
       logout(reason: SessionEnd.absolute);
       return;

@@ -32,10 +32,15 @@ class _UsersScreenState extends State<UsersScreen> {
     try {
       final response = await context.read<Dio>().get('/users');
       final data = response.data;
-      final items = data is Map && data['items'] is List ? data['items'] as List : const [];
+      final items = data is Map && data['items'] is List
+          ? data['items'] as List
+          : const [];
       if (!mounted) return;
       setState(() {
-        _items = [for (final item in items) if (item is Map) Map<String, dynamic>.from(item)];
+        _items = [
+          for (final item in items)
+            if (item is Map) Map<String, dynamic>.from(item),
+        ];
         _loading = false;
       });
     } on DioException catch (error) {
@@ -62,15 +67,27 @@ class _UsersScreenState extends State<UsersScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Пользователи'),
-        actions: [IconButton(onPressed: () => context.go('/'), icon: const Icon(Icons.home))],
+        actions: [
+          IconButton(
+            tooltip: 'На главную',
+            onPressed: () => context.go('/'),
+            icon: const Icon(Icons.home),
+          ),
+        ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          const Text('Этот экран есть только у администратора: смена ролей других учётных записей.'),
+          const Text(
+            'Этот экран есть только у администратора: смена ролей других учётных записей.',
+          ),
           const SizedBox(height: 16),
           if (_loading) const Center(child: CircularProgressIndicator()),
-          if (_error != null) Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+          if (_error != null)
+            Text(
+              _error!,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
           for (final item in _items)
             ListTile(
               title: Text('${item['fullName']}'),
@@ -79,10 +96,15 @@ class _UsersScreenState extends State<UsersScreen> {
                 value: '${item['role']}',
                 items: [
                   for (final role in AppRole.values)
-                    DropdownMenuItem(value: role.name, child: Text(roleTitle(role))),
+                    DropdownMenuItem(
+                      value: role.name,
+                      child: Text(roleTitle(role)),
+                    ),
                 ],
                 onChanged: (value) {
-                  if (value != null && value != item['role']) _save(item['id'] as int, value);
+                  if (value != null && value != item['role']) {
+                    _save(item['id'] as int, value);
+                  }
                 },
               ),
             ),

@@ -17,6 +17,7 @@ import '../widgets/filter_dropdown.dart';
 import '../widgets/entity_table.dart';
 import '../widgets/list_status_body.dart';
 import '../widgets/pagination_bar.dart';
+import '../widgets/record_card.dart';
 
 class ConfectionerListScreen extends StatefulWidget {
   const ConfectionerListScreen({super.key});
@@ -39,8 +40,14 @@ class _ConfectionerListScreenState extends State<ConfectionerListScreen> {
         title: const Text('Удалить выбранных?'),
         content: Text('Логическое удаление (${notifier.selected.length} шт.)'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Отмена')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Удалить')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Отмена'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Удалить'),
+          ),
         ],
       ),
     );
@@ -55,12 +62,15 @@ class _ConfectionerListScreenState extends State<ConfectionerListScreen> {
     final notifier = context.watch<ConfectionerListNotifier>();
     final q = notifier.query;
     final compact = isCompactWidth(context);
-    final manage = context.watch<AuthNotifier>().allows(AppAction.manageCatalog);
+    final manage = context.watch<AuthNotifier>().allows(
+      AppAction.manageCatalog,
+    );
     final restore = context.watch<AuthNotifier>().allows(AppAction.restore);
     final hard = context.watch<AuthNotifier>().allows(AppAction.hardDelete);
     final references = context.watch<ReferenceRepository>();
     final workshopNames = {
-      for (final workshop in context.read<WorkshopRepository>().all) workshop.id: workshop.name,
+      for (final workshop in context.read<WorkshopRepository>().all)
+        workshop.id: workshop.name,
     };
 
     return Scaffold(
@@ -68,18 +78,28 @@ class _ConfectionerListScreenState extends State<ConfectionerListScreen> {
         title: const Text('Кондитеры'),
         actions: [
           if (manage && notifier.hasSelection)
-            TextButton.icon(
-              onPressed: () => _confirmDeleteSelected(notifier),
-              icon: const Icon(Icons.delete_outline),
-              label: Text('Удалить (${notifier.selected.length})'),
-            ),
+            MediaQuery.sizeOf(context).width < 600
+                ? IconButton(
+                    tooltip: 'Удалить выбранные (${notifier.selected.length})',
+                    onPressed: () => _confirmDeleteSelected(notifier),
+                    icon: const Icon(Icons.delete_outline),
+                  )
+                : TextButton.icon(
+                    onPressed: () => _confirmDeleteSelected(notifier),
+                    icon: const Icon(Icons.delete_outline),
+                    label: Text('Удалить (${notifier.selected.length})'),
+                  ),
           if (manage)
             IconButton(
               tooltip: 'Новый кондитер',
               onPressed: () => context.push('/confectioners/new'),
               icon: const Icon(Icons.add),
             ),
-          IconButton(onPressed: () => context.go('/'), icon: const Icon(Icons.home)),
+          IconButton(
+            tooltip: 'На главную',
+            onPressed: () => context.go('/'),
+            icon: const Icon(Icons.home),
+          ),
         ],
       ),
       body: Padding(
@@ -89,52 +109,72 @@ class _ConfectionerListScreenState extends State<ConfectionerListScreen> {
             Align(
               alignment: Alignment.centerLeft,
               child: TextButton.icon(
-                onPressed: () => setState(() => _filtersExpanded = !_filtersExpanded),
-                icon: Icon(_filtersExpanded ? Icons.expand_less : Icons.expand_more),
-                label: Text(_filtersExpanded ? 'Скрыть фильтры' : 'Показать фильтры'),
+                onPressed: () =>
+                    setState(() => _filtersExpanded = !_filtersExpanded),
+                icon: Icon(
+                  _filtersExpanded ? Icons.expand_less : Icons.expand_more,
+                ),
+                label: Text(
+                  _filtersExpanded ? 'Скрыть фильтры' : 'Показать фильтры',
+                ),
               ),
             ),
             if (_filtersExpanded)
               Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: [
-                SizedBox(
-                  width: 260,
-                  child: DebouncedSearchField(
-                    initialValue: q.search,
-                    label: 'Поиск по фамилии или стране',
-                    onChanged: (value) => _navigate(q.copyWith(search: value)),
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  SizedBox(
+                    width: 260,
+                    child: DebouncedSearchField(
+                      initialValue: q.search,
+                      label: 'Поиск по фамилии или стране',
+                      onChanged: (value) =>
+                          _navigate(q.copyWith(search: value)),
+                    ),
                   ),
-                ),
-                FilterDropdown<String?>(
-                  label: 'Страна',
-                  value: q.country,
-                  items: [
-                    DropdownMenuItem(value: null, child: FilterDropdown.menuText('Все страны')),
-                    for (final c in references.countries)
-                      DropdownMenuItem(value: c, child: FilterDropdown.menuText(c)),
-                  ],
-                  onChanged: (value) => _navigate(q.copyWith(country: value)),
-                ),
-                FilterDropdown<String?>(
-                  label: 'Специализация',
-                  width: 240,
-                  value: q.specialty,
-                  items: [
-                    DropdownMenuItem(value: null, child: FilterDropdown.menuText('Любая')),
-                    for (final s in references.specialties)
-                      DropdownMenuItem(value: s, child: FilterDropdown.menuText(s)),
-                  ],
-                  onChanged: (value) => _navigate(q.copyWith(specialty: value)),
-                ),
-                FilterChip(
-                  label: const Text('Показать удалённых'),
-                  selected: q.includeDeleted,
-                  onSelected: (value) => _navigate(q.copyWith(includeDeleted: value)),
-                ),
-              ],
-            ),
+                  FilterDropdown<String?>(
+                    label: 'Страна',
+                    value: q.country,
+                    items: [
+                      DropdownMenuItem(
+                        value: null,
+                        child: FilterDropdown.menuText('Все страны'),
+                      ),
+                      for (final c in references.countries)
+                        DropdownMenuItem(
+                          value: c,
+                          child: FilterDropdown.menuText(c),
+                        ),
+                    ],
+                    onChanged: (value) => _navigate(q.copyWith(country: value)),
+                  ),
+                  FilterDropdown<String?>(
+                    label: 'Специализация',
+                    width: 240,
+                    value: q.specialty,
+                    items: [
+                      DropdownMenuItem(
+                        value: null,
+                        child: FilterDropdown.menuText('Любая'),
+                      ),
+                      for (final s in references.specialties)
+                        DropdownMenuItem(
+                          value: s,
+                          child: FilterDropdown.menuText(s),
+                        ),
+                    ],
+                    onChanged: (value) =>
+                        _navigate(q.copyWith(specialty: value)),
+                  ),
+                  FilterChip(
+                    label: const Text('Показать удалённых'),
+                    selected: q.includeDeleted,
+                    onSelected: (value) =>
+                        _navigate(q.copyWith(includeDeleted: value)),
+                  ),
+                ],
+              ),
             if (_filtersExpanded) const SizedBox(height: 8),
             const SizedBox(height: 16),
             Expanded(
@@ -147,23 +187,27 @@ class _ConfectionerListScreenState extends State<ConfectionerListScreen> {
                   children: [
                     Expanded(
                       child: compact
-                          ? ListView.builder(
+                          ? CardBoard(
                               itemCount: notifier.result.items.length,
                               itemBuilder: (context, index) {
                                 final c = notifier.result.items[index];
-                                return Card(
-                                  child: ListTile(
-                                    leading: Checkbox(
-                                      value: notifier.selected.contains(c.id),
-                                      onChanged: (_) => notifier.toggleSelection(c.id),
-                                    ),
-                                    title: Text(c.fullName),
-                                    subtitle: Text('${c.country} · ${c.specialty} · ${workshopNames[c.workshopId] ?? '—'}'),
-                                    trailing: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: _confectionerActions(context, notifier, c, _navigate, manage: manage, restore: restore, hard: hard),
-                                    ),
-                                    onTap: () => context.push('/confectioners/${c.id}'),
+                                return RecordCard(
+                                  selected: notifier.selected.contains(c.id),
+                                  onSelected: (_) =>
+                                      notifier.toggleSelection(c.id),
+                                  title: c.fullName,
+                                  subtitle:
+                                      '${c.country} · ${c.specialty} · ${workshopNames[c.workshopId] ?? '—'}',
+                                  onTap: () =>
+                                      context.push('/confectioners/${c.id}'),
+                                  actions: _confectionerActions(
+                                    context,
+                                    notifier,
+                                    c,
+                                    _navigate,
+                                    manage: manage,
+                                    restore: restore,
+                                    hard: hard,
                                   ),
                                 );
                               },
@@ -178,23 +222,55 @@ class _ConfectionerListScreenState extends State<ConfectionerListScreen> {
                               onSort: (field) => _navigate(
                                 q.copyWith(
                                   sortField: field,
-                                  sortAscending: field == q.sortField ? !q.sortAscending : true,
+                                  sortAscending: field == q.sortField
+                                      ? !q.sortAscending
+                                      : true,
                                 ),
                               ),
                               columns: [
-                                TableColumnSpec(label: 'Фамилия', sortField: 'lastName', build: (c) => Text(c.lastName)),
-                                TableColumnSpec(label: 'Имя', sortField: 'firstName', build: (c) => Text(c.firstName)),
-                                TableColumnSpec(label: 'Страна', sortField: 'country', build: (c) => Text(c.country)),
-                                TableColumnSpec(label: 'Специализация', sortField: 'specialty', build: (c) => Text(c.specialty)),
-                                TableColumnSpec(label: 'Цех', build: (c) => Text(workshopNames[c.workshopId] ?? '—')),
+                                TableColumnSpec(
+                                  label: 'Фамилия',
+                                  sortField: 'lastName',
+                                  build: (c) => Text(c.lastName),
+                                ),
+                                TableColumnSpec(
+                                  label: 'Имя',
+                                  sortField: 'firstName',
+                                  build: (c) => Text(c.firstName),
+                                ),
+                                TableColumnSpec(
+                                  label: 'Страна',
+                                  sortField: 'country',
+                                  build: (c) => Text(c.country),
+                                ),
+                                TableColumnSpec(
+                                  label: 'Специализация',
+                                  sortField: 'specialty',
+                                  build: (c) => Text(c.specialty),
+                                ),
+                                TableColumnSpec(
+                                  label: 'Цех',
+                                  build: (c) =>
+                                      Text(workshopNames[c.workshopId] ?? '—'),
+                                ),
                               ],
-                              actions: (c) => _confectionerActions(context, notifier, c, _navigate, manage: manage, restore: restore, hard: hard),
+                              actions: (c) => _confectionerActions(
+                                context,
+                                notifier,
+                                c,
+                                _navigate,
+                                manage: manage,
+                                restore: restore,
+                                hard: hard,
+                              ),
                             ),
                     ),
                     PaginationBar(
                       result: notifier.result,
-                      onPageChanged: (page) => _navigate(q.copyWith(page: page)),
-                      onSizeChanged: (size) => _navigate(q.copyWith(size: size)),
+                      onPageChanged: (page) =>
+                          _navigate(q.copyWith(page: page)),
+                      onSizeChanged: (size) =>
+                          _navigate(q.copyWith(size: size)),
                     ),
                   ],
                 ),

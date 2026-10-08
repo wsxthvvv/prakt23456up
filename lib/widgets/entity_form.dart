@@ -21,7 +21,12 @@ class TextFieldSpec {
 }
 
 class FormScaffold extends StatelessWidget {
-  const FormScaffold({super.key, required this.title, required this.dirty, required this.child});
+  const FormScaffold({
+    super.key,
+    required this.title,
+    required this.dirty,
+    required this.child,
+  });
 
   final String title;
   final bool dirty;
@@ -35,7 +40,7 @@ class FormScaffold extends StatelessWidget {
         appBar: AppBar(title: Text(title)),
         body: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 760),
+            constraints: const BoxConstraints(maxWidth: 640),
             child: ListView(
               padding: const EdgeInsets.all(24),
               children: [
@@ -78,16 +83,17 @@ class EntityFormBody extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          for (final child in children) ...[
-            child,
-            const SizedBox(height: 16),
-          ],
+          for (final child in children) ...[child, const SizedBox(height: 16)],
           Align(
             alignment: Alignment.centerLeft,
             child: FilledButton(
               onPressed: saving ? null : onSubmit,
               child: saving
-                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
                   : Text(submitLabel),
             ),
           ),
@@ -98,12 +104,25 @@ class EntityFormBody extends StatelessWidget {
 }
 
 Widget labeledField(TextFieldSpec spec) {
-  return TextFormField(
+  final field = TextFormField(
     controller: spec.controller,
     maxLines: spec.maxLines,
     keyboardType: spec.keyboardType,
-    decoration: InputDecoration(labelText: spec.label, border: const OutlineInputBorder()),
+    decoration: InputDecoration(
+      labelText: spec.label,
+      border: const OutlineInputBorder(),
+    ),
     validator: spec.validator,
     onChanged: spec.onChanged,
   );
+  if (spec.keyboardType == TextInputType.number) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 220),
+        child: field,
+      ),
+    );
+  }
+  return field;
 }

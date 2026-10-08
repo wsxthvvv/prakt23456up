@@ -31,7 +31,12 @@ class WorkshopDetailScreen extends StatelessWidget {
           }
           final item = snapshot.data;
           if (item == null) {
-            return Center(child: FilledButton(onPressed: () => context.go('/workshops'), child: const Text('К списку')));
+            return Center(
+              child: FilledButton(
+                onPressed: () => context.go('/workshops'),
+                child: const Text('К списку'),
+              ),
+            );
           }
           final flavors = context.read<FlavorRepository>().all;
           final flavorNames = item.flavorIds
@@ -42,14 +47,19 @@ class WorkshopDetailScreen extends StatelessWidget {
                 return '?';
               })
               .join(', ');
-          final linked = context.read<ProductRepository>().countByWorkshop(item.id);
+          final linked = context.read<ProductRepository>().countByWorkshop(
+            item.id,
+          );
           return Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 560),
               child: ListView(
                 padding: const EdgeInsets.all(24),
                 children: [
-                  Text(item.name, style: Theme.of(context).textTheme.headlineSmall),
+                  Text(
+                    item.name,
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
                   const SizedBox(height: 12),
                   Text('Город: ${item.city}'),
                   Text('Телефон: ${item.phone}'),
@@ -61,18 +71,46 @@ class WorkshopDetailScreen extends StatelessWidget {
                     spacing: 8,
                     runSpacing: 8,
                     children: [
-                      if (context.watch<AuthNotifier>().allows(AppAction.manageCatalog))
-                        FilledButton(onPressed: () => context.push('/workshops/${item.id}/edit'), child: const Text('Изменить')),
-                      FilledButton(onPressed: () => context.go('/workshops'), child: const Text('К списку')),
-                      if (item.isDeleted && context.watch<AuthNotifier>().allows(AppAction.restore))
-                        FilledButton.tonal(onPressed: () => _restore(context, item.id), child: const Text('Восстановить'))
+                      if (context.watch<AuthNotifier>().allows(
+                        AppAction.manageCatalog,
+                      ))
+                        FilledButton(
+                          onPressed: () =>
+                              context.push('/workshops/${item.id}/edit'),
+                          child: const Text('Изменить'),
+                        ),
+                      FilledButton(
+                        onPressed: () => context.go('/workshops'),
+                        child: const Text('К списку'),
+                      ),
+                      if (item.isDeleted &&
+                          context.watch<AuthNotifier>().allows(
+                            AppAction.restore,
+                          ))
+                        FilledButton.tonal(
+                          onPressed: () => _restore(context, item.id),
+                          child: const Text('Восстановить'),
+                        )
                       else if (!item.isDeleted) ...[
-                        if (context.watch<AuthNotifier>().allows(AppAction.manageCatalog))
-                          FilledButton.tonal(onPressed: () => _remove(context, item.id, soft: true), child: const Text('Скрыть')),
-                        if (context.watch<AuthNotifier>().allows(AppAction.hardDelete))
+                        if (context.watch<AuthNotifier>().allows(
+                          AppAction.manageCatalog,
+                        ))
+                          FilledButton.tonal(
+                            onPressed: () =>
+                                _remove(context, item.id, soft: true),
+                            child: const Text('Скрыть'),
+                          ),
+                        if (context.watch<AuthNotifier>().allows(
+                          AppAction.hardDelete,
+                        ))
                           FilledButton(
-                            style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
-                            onPressed: () => _remove(context, item.id, soft: false),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: Theme.of(context)
+                                  .colorScheme
+                                  .error,
+                            ),
+                            onPressed: () =>
+                                _remove(context, item.id, soft: false),
                             child: const Text('Удалить навсегда'),
                           ),
                       ],
@@ -87,7 +125,11 @@ class WorkshopDetailScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _remove(BuildContext context, int id, {required bool soft}) async {
+  Future<void> _remove(
+    BuildContext context,
+    int id, {
+    required bool soft,
+  }) async {
     final notifier = context.read<CatalogNotifier<Workshop, WorkshopQuery>>();
     final done = await runWorkshopDelete(context, () async {
       if (soft) {

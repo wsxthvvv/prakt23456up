@@ -16,14 +16,21 @@ class ForbiddenScreen extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.lock_outline, size: 48, color: Theme.of(context).colorScheme.error),
+                Icon(
+                  Icons.lock_outline,
+                  size: 48,
+                  color: Theme.of(context).colorScheme.error,
+                ),
                 const SizedBox(height: 16),
                 const Text(
                   'Этого адреса нет в правах текущей роли. Открытие ссылки вручную не обходит проверку маршрута.',
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 20),
-                FilledButton(onPressed: () => context.go('/'), child: const Text('На главную')),
+                FilledButton(
+                  onPressed: () => context.go('/'),
+                  child: const Text('На главную'),
+                ),
               ],
             ),
           ),

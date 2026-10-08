@@ -61,11 +61,16 @@ class HomeScreen extends StatelessWidget {
                 _link(context, '/flavors', 'Вкусы'),
                 _link(context, '/workshops', 'Цеха'),
               ],
-              if (auth.allows(AppAction.manageCustomers)) _link(context, '/customers', 'Покупатели'),
-              if (auth.allows(AppAction.viewOwnOrders)) _link(context, '/my-orders', 'Мои заказы'),
-              if (auth.allows(AppAction.manageOrders)) _link(context, '/orders', 'Оформление заказов'),
-              if (auth.allows(AppAction.manageUsers)) _link(context, '/admin/users', 'Пользователи'),
-              if (auth.allows(AppAction.viewStats)) _link(context, '/admin/stats', 'Статистика'),
+              if (auth.allows(AppAction.manageCustomers))
+                _link(context, '/customers', 'Покупатели'),
+              if (auth.allows(AppAction.viewOwnOrders))
+                _link(context, '/my-orders', 'Мои заказы'),
+              if (auth.allows(AppAction.manageOrders))
+                _link(context, '/orders', 'Оформление заказов'),
+              if (auth.allows(AppAction.manageUsers))
+                _link(context, '/admin/users', 'Пользователи'),
+              if (auth.allows(AppAction.viewStats))
+                _link(context, '/admin/stats', 'Статистика'),
             ],
           ),
         ),
@@ -78,7 +83,10 @@ class HomeScreen extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 12),
       child: SizedBox(
         width: double.infinity,
-        child: FilledButton(onPressed: () => context.go(path), child: Text(label)),
+        child: FilledButton(
+          onPressed: () => context.go(path),
+          child: Text(label),
+        ),
       ),
     );
   }

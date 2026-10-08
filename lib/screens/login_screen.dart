@@ -28,7 +28,9 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _submit() async {
-    final usernameError = _username.text.trim().isEmpty ? 'Укажите логин' : null;
+    final usernameError = _username.text.trim().isEmpty
+        ? 'Укажите логин'
+        : null;
     final passwordError = _password.text.isEmpty ? 'Укажите пароль' : null;
     setState(() {
       _usernameError = usernameError;
@@ -57,29 +59,45 @@ class _LoginScreenState extends State<LoginScreen> {
             padding: const EdgeInsets.all(24),
             children: [
               const SizedBox(height: 48),
-              Text('Вход', style: Theme.of(context).textTheme.headlineSmall, textAlign: TextAlign.center),
+              Text(
+                'Вход',
+                style: Theme.of(context).textTheme.headlineSmall,
+                textAlign: TextAlign.center,
+              ),
               const SizedBox(height: 8),
               const Text('Кондитерская «нямка»', textAlign: TextAlign.center),
               if (notice != null) ...[
                 const SizedBox(height: 16),
-                MaterialBanner(content: Text(notice), actions: const [SizedBox.shrink()]),
+                MaterialBanner(
+                  content: Text(notice),
+                  actions: const [SizedBox.shrink()],
+                ),
               ],
               const SizedBox(height: 24),
               TextField(
                 controller: _username,
-                decoration: InputDecoration(labelText: 'Логин', errorText: _usernameError),
+                decoration: InputDecoration(
+                  labelText: 'Логин',
+                  errorText: _usernameError,
+                ),
                 textInputAction: TextInputAction.next,
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: _password,
                 obscureText: true,
-                decoration: InputDecoration(labelText: 'Пароль', errorText: _passwordError),
+                decoration: InputDecoration(
+                  labelText: 'Пароль',
+                  errorText: _passwordError,
+                ),
                 onSubmitted: (_) => _busy ? null : _submit(),
               ),
               if (_formError != null) ...[
                 const SizedBox(height: 12),
-                Text(_formError!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                Text(
+                  _formError!,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
               ],
               const SizedBox(height: 20),
               FilledButton(

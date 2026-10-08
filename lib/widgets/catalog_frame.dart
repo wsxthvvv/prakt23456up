@@ -11,8 +11,14 @@ Future<bool> confirmLogicalDelete(BuildContext context, int count) async {
       title: const Text('Удалить выбранные?'),
       content: Text('Будет выполнено логическое удаление ($count шт.)'),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Отмена')),
-        FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Удалить')),
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, false),
+          child: const Text('Отмена'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(ctx, true),
+          child: const Text('Удалить'),
+        ),
       ],
     ),
   );
@@ -60,13 +66,28 @@ class CatalogFrame extends StatelessWidget {
         title: Text(title),
         actions: [
           if (canCreate && selectedCount > 0)
-            TextButton.icon(
-              onPressed: onDeleteSelected,
-              icon: const Icon(Icons.delete_outline),
-              label: Text('Удалить ($selectedCount)'),
+            MediaQuery.sizeOf(context).width < 600
+                ? IconButton(
+                    tooltip: 'Удалить выбранные ($selectedCount)',
+                    onPressed: onDeleteSelected,
+                    icon: const Icon(Icons.delete_outline),
+                  )
+                : TextButton.icon(
+                    onPressed: onDeleteSelected,
+                    icon: const Icon(Icons.delete_outline),
+                    label: Text('Удалить ($selectedCount)'),
+                  ),
+          if (canCreate)
+            IconButton(
+              tooltip: 'Добавить',
+              onPressed: onCreate,
+              icon: const Icon(Icons.add),
             ),
-          if (canCreate) IconButton(tooltip: 'Добавить', onPressed: onCreate, icon: const Icon(Icons.add)),
-          IconButton(tooltip: 'На главную', onPressed: () => context.go('/'), icon: const Icon(Icons.home)),
+          IconButton(
+            tooltip: 'На главную',
+            onPressed: () => context.go('/'),
+            icon: const Icon(Icons.home),
+          ),
         ],
       ),
       body: Padding(
@@ -78,8 +99,12 @@ class CatalogFrame extends StatelessWidget {
               alignment: Alignment.centerLeft,
               child: TextButton.icon(
                 onPressed: onToggleFilters,
-                icon: Icon(filtersExpanded ? Icons.expand_less : Icons.expand_more),
-                label: Text(filtersExpanded ? 'Скрыть фильтры' : 'Показать фильтры'),
+                icon: Icon(
+                  filtersExpanded ? Icons.expand_less : Icons.expand_more,
+                ),
+                label: Text(
+                  filtersExpanded ? 'Скрыть фильтры' : 'Показать фильтры',
+                ),
               ),
             ),
             if (filtersExpanded)

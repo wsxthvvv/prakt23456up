@@ -7,5 +7,6 @@ class NamedOption {
 
   Map<String, dynamic> toJson() => {'name': name};
 
-  factory NamedOption.fromJson(Map<String, dynamic> json) => NamedOption(jsonString(json['name']));
+  factory NamedOption.fromJson(Map<String, dynamic> json) =>
+      NamedOption(jsonString(json['name']));
 }

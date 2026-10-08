@@ -99,8 +99,13 @@ abstract final class AppTheme {
           return null;
         }),
       ),
-      progressIndicatorTheme: const ProgressIndicatorThemeData(color: _softPinkDeep),
+      progressIndicatorTheme: const ProgressIndicatorThemeData(
+        color: _softPinkDeep,
+      ),
       dividerTheme: DividerThemeData(color: _softPink.withValues(alpha: 0.25)),
+      dialogTheme: const DialogThemeData(
+        constraints: BoxConstraints(minWidth: 280, maxWidth: 440),
+      ),
     );
   }
 }

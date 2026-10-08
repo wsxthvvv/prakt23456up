@@ -8,8 +8,6 @@ class ProductCategory {
 
   Map<String, dynamic> toJson() => {'id': id, 'name': name};
 
-  factory ProductCategory.fromJson(Map<String, dynamic> json) => ProductCategory(
-        id: jsonInt(json['id']),
-        name: jsonString(json['name']),
-      );
+  factory ProductCategory.fromJson(Map<String, dynamic> json) =>
+      ProductCategory(id: jsonInt(json['id']), name: jsonString(json['name']));
 }

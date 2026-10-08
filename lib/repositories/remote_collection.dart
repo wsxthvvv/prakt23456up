@@ -34,83 +34,95 @@ class RemoteCollection<T> {
   }
 
   Future<T?> findById(int id) => guard(() async {
-        try {
-          final response = await dio.get('/$resource/$id');
-          return decode(_asMap(response.data));
-        } on DioException catch (error) {
-          if (mapDioError(error) is NotFoundException) return null;
-          rethrow;
-        }
-      });
+    try {
+      final response = await dio.get('/$resource/$id');
+      return decode(_asMap(response.data));
+    } on DioException catch (error) {
+      if (mapDioError(error) is NotFoundException) return null;
+      rethrow;
+    }
+  });
 
   Future<T> create(T item) => guard(() async {
-        final response = await dio.post('/$resource', data: encode(item));
-        final created = decode(_asMap(response.data));
-        cache.add(created);
-        return created;
-      });
+    final response = await dio.post('/$resource', data: encode(item));
+    final created = decode(_asMap(response.data));
+    cache.add(created);
+    return created;
+  });
 
   Future<T> update(T item) => guard(() async {
-        final response = await dio.put('/$resource/${idOf(item)}', data: encode(item));
-        final saved = decode(_asMap(response.data));
-        final index = cache.indexWhere((row) => idOf(row) == idOf(saved));
-        if (index >= 0) {
-          cache[index] = saved;
-        } else {
-          cache.add(saved);
-        }
-        return saved;
-      });
+    final response = await dio.put(
+      '/$resource/${idOf(item)}',
+      data: encode(item),
+    );
+    final saved = decode(_asMap(response.data));
+    final index = cache.indexWhere((row) => idOf(row) == idOf(saved));
+    if (index >= 0) {
+      cache[index] = saved;
+    } else {
+      cache.add(saved);
+    }
+    return saved;
+  });
 
   Future<void> softDelete(int id) => guard(() async {
-        await dio.delete('/$resource/$id', options: Options(responseType: ResponseType.plain));
-        await _reload();
-      });
+    await dio.delete(
+      '/$resource/$id',
+      options: Options(responseType: ResponseType.plain),
+    );
+    await _reload();
+  });
 
   Future<void> hardDelete(int id) => guard(() async {
-        await dio.delete(
-          '/$resource/$id',
-          queryParameters: {'hard': true},
-          options: Options(responseType: ResponseType.plain),
-        );
-        cache.removeWhere((item) => idOf(item) == id);
-      });
+    await dio.delete(
+      '/$resource/$id',
+      queryParameters: {'hard': true},
+      options: Options(responseType: ResponseType.plain),
+    );
+    cache.removeWhere((item) => idOf(item) == id);
+  });
 
   Future<void> restore(int id) => guard(() async {
-        final response = await dio.post('/$resource/$id/restore');
-        final saved = decode(_asMap(response.data));
-        final index = cache.indexWhere((row) => idOf(row) == id);
-        if (index >= 0) {
-          cache[index] = saved;
-        } else {
-          cache.add(saved);
-        }
-      });
+    final response = await dio.post('/$resource/$id/restore');
+    final saved = decode(_asMap(response.data));
+    final index = cache.indexWhere((row) => idOf(row) == id);
+    if (index >= 0) {
+      cache[index] = saved;
+    } else {
+      cache.add(saved);
+    }
+  });
 
   Future<int> deleteMany(List<int> ids) => guard(() async {
-        final response = await dio.post('/$resource/bulk-delete', data: {'ids': ids});
-        await _reload();
-        return jsonInt(_asMap(response.data)['deleted']);
-      });
+    final response = await dio.post(
+      '/$resource/bulk-delete',
+      data: {'ids': ids},
+    );
+    await _reload();
+    return jsonInt(_asMap(response.data)['deleted']);
+  });
 
-  Future<PageResult<T>> _get(Map<String, dynamic> query, {CancelToken? cancelToken}) => guard(() async {
-        final response = await dio.get(
-          '/$resource',
-          queryParameters: query,
-          cancelToken: cancelToken,
-        );
-        final data = _asMap(response.data);
-        final items = [
-          for (final item in (data['items'] as List? ?? const []))
-            if (item is Map) decode(Map<String, dynamic>.from(item)),
-        ];
-        return PageResult(
-          items: items,
-          page: jsonInt(data['page'], 1),
-          size: jsonInt(data['size'], 10),
-          total: jsonInt(data['total']),
-        );
-      });
+  Future<PageResult<T>> _get(
+    Map<String, dynamic> query, {
+    CancelToken? cancelToken,
+  }) => guard(() async {
+    final response = await dio.get(
+      '/$resource',
+      queryParameters: query,
+      cancelToken: cancelToken,
+    );
+    final data = _asMap(response.data);
+    final items = [
+      for (final item in (data['items'] as List? ?? const []))
+        if (item is Map) decode(Map<String, dynamic>.from(item)),
+    ];
+    return PageResult(
+      items: items,
+      page: jsonInt(data['page'], 1),
+      size: jsonInt(data['size'], 10),
+      total: jsonInt(data['total']),
+    );
+  });
 
   Future<void> _reload() async {
     final loaded = <T>[];

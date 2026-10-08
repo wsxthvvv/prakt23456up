@@ -18,6 +18,7 @@ import '../widgets/filter_dropdown.dart';
 import '../widgets/entity_table.dart';
 import '../widgets/list_status_body.dart';
 import '../widgets/pagination_bar.dart';
+import '../widgets/record_card.dart';
 
 class ProductListScreen extends StatefulWidget {
   const ProductListScreen({super.key});
@@ -38,10 +39,18 @@ class _ProductListScreenState extends State<ProductListScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Удалить выбранные?'),
-        content: Text('Будет выполнено логическое удаление (${notifier.selected.length} шт.)'),
+        content: Text(
+          'Будет выполнено логическое удаление (${notifier.selected.length} шт.)',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Отмена')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Удалить')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Отмена'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Удалить'),
+          ),
         ],
       ),
     );
@@ -56,7 +65,9 @@ class _ProductListScreenState extends State<ProductListScreen> {
     final notifier = context.watch<ProductListNotifier>();
     final q = notifier.query;
     final compact = isCompactWidth(context);
-    final manage = context.watch<AuthNotifier>().allows(AppAction.manageCatalog);
+    final manage = context.watch<AuthNotifier>().allows(
+      AppAction.manageCatalog,
+    );
     final restore = context.watch<AuthNotifier>().allows(AppAction.restore);
     final hard = context.watch<AuthNotifier>().allows(AppAction.hardDelete);
     final references = context.watch<ReferenceRepository>();
@@ -71,11 +82,17 @@ class _ProductListScreenState extends State<ProductListScreen> {
         title: const Text('Каталог изделий'),
         actions: [
           if (manage && notifier.hasSelection)
-            TextButton.icon(
-              onPressed: () => _confirmDeleteSelected(notifier),
-              icon: const Icon(Icons.delete_outline),
-              label: Text('Удалить (${notifier.selected.length})'),
-            ),
+            MediaQuery.sizeOf(context).width < 600
+                ? IconButton(
+                    tooltip: 'Удалить выбранные (${notifier.selected.length})',
+                    onPressed: () => _confirmDeleteSelected(notifier),
+                    icon: const Icon(Icons.delete_outline),
+                  )
+                : TextButton.icon(
+                    onPressed: () => _confirmDeleteSelected(notifier),
+                    icon: const Icon(Icons.delete_outline),
+                    label: Text('Удалить (${notifier.selected.length})'),
+                  ),
           if (manage)
             IconButton(
               tooltip: 'Новое изделие',
@@ -97,79 +114,106 @@ class _ProductListScreenState extends State<ProductListScreen> {
             Align(
               alignment: Alignment.centerLeft,
               child: TextButton.icon(
-                onPressed: () => setState(() => _filtersExpanded = !_filtersExpanded),
-                icon: Icon(_filtersExpanded ? Icons.expand_less : Icons.expand_more),
-                label: Text(_filtersExpanded ? 'Скрыть фильтры' : 'Показать фильтры'),
+                onPressed: () =>
+                    setState(() => _filtersExpanded = !_filtersExpanded),
+                icon: Icon(
+                  _filtersExpanded ? Icons.expand_less : Icons.expand_more,
+                ),
+                label: Text(
+                  _filtersExpanded ? 'Скрыть фильтры' : 'Показать фильтры',
+                ),
               ),
             ),
             if (_filtersExpanded)
               Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                SizedBox(
-                  width: 260,
-                  child: DebouncedSearchField(
-                    initialValue: q.search,
-                    label: 'Поиск по названию или артикулу',
-                    onChanged: (value) => _navigate(q.copyWith(search: value)),
+                spacing: 12,
+                runSpacing: 12,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  SizedBox(
+                    width: 260,
+                    child: DebouncedSearchField(
+                      initialValue: q.search,
+                      label: 'Поиск по названию или артикулу',
+                      onChanged: (value) =>
+                          _navigate(q.copyWith(search: value)),
+                    ),
                   ),
-                ),
-                FilterDropdown<int?>(
-                  label: 'Категория',
-                  width: 240,
-                  value: q.categoryId,
-                  items: [
-                    DropdownMenuItem(value: null, child: FilterDropdown.menuText('Все категории')),
-                    for (final c in references.categories)
-                      DropdownMenuItem(value: c.id, child: FilterDropdown.menuText(c.name)),
-                  ],
-                  onChanged: (value) => _navigate(q.copyWith(categoryId: value)),
-                ),
-                FilterDropdown<int?>(
-                  label: 'Вкус',
-                  value: q.flavorTagId,
-                  items: [
-                    DropdownMenuItem(value: null, child: FilterDropdown.menuText('Любой вкус')),
-                    for (final flavor in flavors)
-                      DropdownMenuItem(value: flavor.id, child: FilterDropdown.menuText(flavor.name)),
-                  ],
-                  onChanged: (value) => _navigate(q.copyWith(flavorTagId: value)),
-                ),
-                SizedBox(
-                  width: 120,
-                  child: TextFormField(
-                    key: ValueKey('from-${q.yearFrom}'),
-                    initialValue: q.yearFrom?.toString() ?? '',
-                    decoration: const InputDecoration(labelText: 'Год от', border: OutlineInputBorder()),
-                    keyboardType: TextInputType.number,
-                    onFieldSubmitted: (value) {
-                      final year = int.tryParse(value.trim());
-                      _navigate(q.copyWith(yearFrom: year));
-                    },
+                  FilterDropdown<int?>(
+                    label: 'Категория',
+                    width: 240,
+                    value: q.categoryId,
+                    items: [
+                      DropdownMenuItem(
+                        value: null,
+                        child: FilterDropdown.menuText('Все категории'),
+                      ),
+                      for (final c in references.categories)
+                        DropdownMenuItem(
+                          value: c.id,
+                          child: FilterDropdown.menuText(c.name),
+                        ),
+                    ],
+                    onChanged: (value) =>
+                        _navigate(q.copyWith(categoryId: value)),
                   ),
-                ),
-                SizedBox(
-                  width: 120,
-                  child: TextFormField(
-                    key: ValueKey('to-${q.yearTo}'),
-                    initialValue: q.yearTo?.toString() ?? '',
-                    decoration: const InputDecoration(labelText: 'Год до', border: OutlineInputBorder()),
-                    keyboardType: TextInputType.number,
-                    onFieldSubmitted: (value) {
-                      final year = int.tryParse(value.trim());
-                      _navigate(q.copyWith(yearTo: year));
-                    },
+                  FilterDropdown<int?>(
+                    label: 'Вкус',
+                    value: q.flavorTagId,
+                    items: [
+                      DropdownMenuItem(
+                        value: null,
+                        child: FilterDropdown.menuText('Любой вкус'),
+                      ),
+                      for (final flavor in flavors)
+                        DropdownMenuItem(
+                          value: flavor.id,
+                          child: FilterDropdown.menuText(flavor.name),
+                        ),
+                    ],
+                    onChanged: (value) =>
+                        _navigate(q.copyWith(flavorTagId: value)),
                   ),
-                ),
-                FilterChip(
-                  label: const Text('Показать удалённые'),
-                  selected: q.includeDeleted,
-                  onSelected: (value) => _navigate(q.copyWith(includeDeleted: value)),
-                ),
-              ],
-            ),
+                  SizedBox(
+                    width: 120,
+                    child: TextFormField(
+                      key: ValueKey('from-${q.yearFrom}'),
+                      initialValue: q.yearFrom?.toString() ?? '',
+                      decoration: const InputDecoration(
+                        labelText: 'Год от',
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                      onFieldSubmitted: (value) {
+                        final year = int.tryParse(value.trim());
+                        _navigate(q.copyWith(yearFrom: year));
+                      },
+                    ),
+                  ),
+                  SizedBox(
+                    width: 120,
+                    child: TextFormField(
+                      key: ValueKey('to-${q.yearTo}'),
+                      initialValue: q.yearTo?.toString() ?? '',
+                      decoration: const InputDecoration(
+                        labelText: 'Год до',
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                      onFieldSubmitted: (value) {
+                        final year = int.tryParse(value.trim());
+                        _navigate(q.copyWith(yearTo: year));
+                      },
+                    ),
+                  ),
+                  FilterChip(
+                    label: const Text('Показать удалённые'),
+                    selected: q.includeDeleted,
+                    onSelected: (value) =>
+                        _navigate(q.copyWith(includeDeleted: value)),
+                  ),
+                ],
+              ),
             if (_filtersExpanded) const SizedBox(height: 8),
             const SizedBox(height: 16),
             Expanded(
@@ -200,8 +244,10 @@ class _ProductListScreenState extends State<ProductListScreen> {
                     const SizedBox(height: 8),
                     PaginationBar(
                       result: notifier.result,
-                      onPageChanged: (page) => _navigate(q.copyWith(page: page)),
-                      onSizeChanged: (size) => _navigate(q.copyWith(size: size)),
+                      onPageChanged: (page) =>
+                          _navigate(q.copyWith(page: page)),
+                      onSizeChanged: (size) =>
+                          _navigate(q.copyWith(size: size)),
                     ),
                   ],
                 ),
@@ -234,7 +280,8 @@ class _ProductTable extends StatelessWidget {
     final q = notifier.query;
     final references = context.read<ReferenceRepository>();
     final workshopNames = {
-      for (final workshop in context.read<WorkshopRepository>().all) workshop.id: workshop.name,
+      for (final workshop in context.read<WorkshopRepository>().all)
+        workshop.id: workshop.name,
     };
     return EntityTable<Product>(
       items: notifier.result.items,
@@ -252,13 +299,41 @@ class _ProductTable extends StatelessWidget {
         );
       },
       columns: [
-        TableColumnSpec(label: 'Название', sortField: 'name', build: (p) => Text(p.name)),
-        TableColumnSpec(label: 'Артикул', sortField: 'sku', build: (p) => Text(p.sku)),
-        TableColumnSpec(label: 'Год', sortField: 'year', numeric: true, build: (p) => Text('${p.year}')),
-        TableColumnSpec(label: 'Масса, г', sortField: 'weight', numeric: true, build: (p) => Text('${p.weightGrams}')),
-        TableColumnSpec(label: 'Категория', build: (p) => Text(references.categoryName(p.categoryId))),
-        TableColumnSpec(label: 'Цех', build: (p) => Text(workshopNames[p.workshopId] ?? '—')),
-        TableColumnSpec(label: 'Остаток', numeric: true, build: (p) => Text('${p.stockAvailable}/${p.stockTotal}')),
+        TableColumnSpec(
+          label: 'Название',
+          sortField: 'name',
+          build: (p) => Text(p.name),
+        ),
+        TableColumnSpec(
+          label: 'Артикул',
+          sortField: 'sku',
+          build: (p) => Text(p.sku),
+        ),
+        TableColumnSpec(
+          label: 'Год',
+          sortField: 'year',
+          numeric: true,
+          build: (p) => Text('${p.year}'),
+        ),
+        TableColumnSpec(
+          label: 'Масса, г',
+          sortField: 'weight',
+          numeric: true,
+          build: (p) => Text('${p.weightGrams}'),
+        ),
+        TableColumnSpec(
+          label: 'Категория',
+          build: (p) => Text(references.categoryName(p.categoryId)),
+        ),
+        TableColumnSpec(
+          label: 'Цех',
+          build: (p) => Text(workshopNames[p.workshopId] ?? '—'),
+        ),
+        TableColumnSpec(
+          label: 'Остаток',
+          numeric: true,
+          build: (p) => Text('${p.stockAvailable}/${p.stockTotal}'),
+        ),
       ],
       actions: (p) => _productActions(
         context,
@@ -292,33 +367,28 @@ class _ProductCardList extends StatelessWidget {
   Widget build(BuildContext context) {
     final references = context.read<ReferenceRepository>();
     final workshopNames = {
-      for (final workshop in context.read<WorkshopRepository>().all) workshop.id: workshop.name,
+      for (final workshop in context.read<WorkshopRepository>().all)
+        workshop.id: workshop.name,
     };
-    return ListView.builder(
+    return CardBoard(
       itemCount: notifier.result.items.length,
       itemBuilder: (context, index) {
         final p = notifier.result.items[index];
-        return Card(
-          child: ListTile(
-            leading: Checkbox(
-              value: notifier.selected.contains(p.id),
-              onChanged: (_) => notifier.toggleSelection(p.id),
-            ),
-            title: Text(p.name),
-            subtitle: Text('${p.sku} · ${references.categoryName(p.categoryId)} · ${workshopNames[p.workshopId] ?? '—'}'),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: _productActions(
-                context,
-                notifier,
-                p,
-                onNavigate,
-                manage: manage,
-                restore: restore,
-                hard: hard,
-              ),
-            ),
-            onTap: () => context.push('/products/${p.id}'),
+        return RecordCard(
+          selected: notifier.selected.contains(p.id),
+          onSelected: (_) => notifier.toggleSelection(p.id),
+          title: p.name,
+          subtitle:
+              '${p.sku} · ${references.categoryName(p.categoryId)} · ${workshopNames[p.workshopId] ?? '—'}',
+          onTap: () => context.push('/products/${p.id}'),
+          actions: _productActions(
+            context,
+            notifier,
+            p,
+            onNavigate,
+            manage: manage,
+            restore: restore,
+            hard: hard,
           ),
         );
       },

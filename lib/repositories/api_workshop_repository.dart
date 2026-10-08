@@ -8,13 +8,13 @@ import 'workshop_repository.dart';
 
 class ApiWorkshopRepository implements WorkshopRepository {
   ApiWorkshopRepository(Dio dio)
-      : _remote = RemoteCollection<Workshop>(
-          dio: dio,
-          resource: 'workshops',
-          decode: Workshop.fromJson,
-          encode: _write,
-          idOf: (item) => item.id,
-        );
+    : _remote = RemoteCollection<Workshop>(
+        dio: dio,
+        resource: 'workshops',
+        decode: Workshop.fromJson,
+        encode: _write,
+        idOf: (item) => item.id,
+      );
 
   final RemoteCollection<Workshop> _remote;
 
@@ -58,8 +58,8 @@ class ApiWorkshopRepository implements WorkshopRepository {
 }
 
 Map<String, dynamic> _write(Workshop item) => {
-      'name': item.name,
-      'city': item.city,
-      'phone': item.phone,
-      'flavorIds': item.flavorIds,
-    };
+  'name': item.name,
+  'city': item.city,
+  'phone': item.phone,
+  'flavorIds': item.flavorIds,
+};

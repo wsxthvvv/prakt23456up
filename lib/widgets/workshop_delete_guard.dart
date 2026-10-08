@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../core/api_exceptions.dart';
 
-Future<bool> runWorkshopDelete(BuildContext context, Future<void> Function() action) async {
+Future<bool> runWorkshopDelete(
+  BuildContext context,
+  Future<void> Function() action,
+) async {
   try {
     await action();
     return true;
@@ -14,14 +17,18 @@ Future<bool> runWorkshopDelete(BuildContext context, Future<void> Function() act
         title: const Text('Удаление невозможно'),
         content: Text(error.message),
         actions: [
-          FilledButton(onPressed: () => Navigator.pop(ctx), child: const Text('Понятно')),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Понятно'),
+          ),
         ],
       ),
     );
     return false;
   } on ApiException catch (error) {
     if (!context.mounted) return false;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.message)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(error.message)));
     return false;
   }
 }

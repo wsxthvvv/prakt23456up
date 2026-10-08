@@ -62,32 +62,32 @@ class Product {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'sku': sku,
-        'year': year,
-        'weightGrams': weightGrams,
-        'categoryId': categoryId,
-        'workshopId': workshopId,
-        'confectionerIds': confectionerIds,
-        'flavorTagIds': flavorTagIds,
-        'stockTotal': stockTotal,
-        'stockAvailable': stockAvailable,
-        'deletedAt': deletedAt?.toIso8601String(),
-      };
+    'id': id,
+    'name': name,
+    'sku': sku,
+    'year': year,
+    'weightGrams': weightGrams,
+    'categoryId': categoryId,
+    'workshopId': workshopId,
+    'confectionerIds': confectionerIds,
+    'flavorTagIds': flavorTagIds,
+    'stockTotal': stockTotal,
+    'stockAvailable': stockAvailable,
+    'deletedAt': deletedAt?.toIso8601String(),
+  };
 
   factory Product.fromJson(Map<String, dynamic> json) => Product(
-        id: jsonInt(json['id']),
-        name: jsonString(json['name']),
-        sku: jsonString(json['sku']),
-        year: jsonInt(json['year']),
-        weightGrams: jsonInt(json['weightGrams']),
-        categoryId: jsonRelationId(json, 'categoryId', 'category', 1),
-        workshopId: jsonRelationId(json, 'workshopId', 'workshop', 1),
-        confectionerIds: jsonRelationIds(json, 'confectionerIds', 'confectioners'),
-        flavorTagIds: jsonRelationIds(json, 'flavorTagIds', 'flavors'),
-        stockTotal: jsonInt(json['stockTotal']),
-        stockAvailable: jsonInt(json['stockAvailable']),
-        deletedAt: jsonDate(json['deletedAt']),
-      );
+    id: jsonInt(json['id']),
+    name: jsonString(json['name']),
+    sku: jsonString(json['sku']),
+    year: jsonInt(json['year']),
+    weightGrams: jsonInt(json['weightGrams']),
+    categoryId: jsonRelationId(json, 'categoryId', 'category', 1),
+    workshopId: jsonRelationId(json, 'workshopId', 'workshop', 1),
+    confectionerIds: jsonRelationIds(json, 'confectionerIds', 'confectioners'),
+    flavorTagIds: jsonRelationIds(json, 'flavorTagIds', 'flavors'),
+    stockTotal: jsonInt(json['stockTotal']),
+    stockAvailable: jsonInt(json['stockAvailable']),
+    deletedAt: jsonDate(json['deletedAt']),
+  );
 }

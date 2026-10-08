@@ -8,13 +8,13 @@ import 'remote_collection.dart';
 
 class ApiCustomerRepository implements CustomerRepository {
   ApiCustomerRepository(Dio dio)
-      : _remote = RemoteCollection<Customer>(
-          dio: dio,
-          resource: 'customers',
-          decode: Customer.fromJson,
-          encode: _write,
-          idOf: (item) => item.id,
-        );
+    : _remote = RemoteCollection<Customer>(
+        dio: dio,
+        resource: 'customers',
+        decode: Customer.fromJson,
+        encode: _write,
+        idOf: (item) => item.id,
+      );
 
   final RemoteCollection<Customer> _remote;
 
@@ -59,14 +59,16 @@ class ApiCustomerRepository implements CustomerRepository {
   @override
   bool emailExists(String email, {int? exceptId}) {
     final needle = email.trim().toLowerCase();
-    return _remote.cache.any((item) => item.id != exceptId && item.email.toLowerCase() == needle);
+    return _remote.cache.any(
+      (item) => item.id != exceptId && item.email.toLowerCase() == needle,
+    );
   }
 }
 
 Map<String, dynamic> _write(Customer item) => {
-      'lastName': item.lastName,
-      'firstName': item.firstName,
-      'email': item.email,
-      'phone': item.phone,
-      'loyaltyCard': item.loyaltyCard.toJson(),
-    };
+  'lastName': item.lastName,
+  'firstName': item.firstName,
+  'email': item.email,
+  'phone': item.phone,
+  'loyaltyCard': item.loyaltyCard.toJson(),
+};

@@ -31,7 +31,11 @@ class InMemoryConfectionerRepository implements ConfectionerRepository {
   Future<void> _persist() async {
     final store = _store;
     if (store == null) return;
-    await store.save(StorageKeys.confectioners, _items, (item) => item.toJson());
+    await store.save(
+      StorageKeys.confectioners,
+      _items,
+      (item) => item.toJson(),
+    );
   }
 
   int _maxId() {
@@ -55,7 +59,9 @@ class InMemoryConfectionerRepository implements ConfectionerRepository {
       final needle = q.search.trim().toLowerCase();
       rows = rows
           .where(
-            (c) => c.lastName.toLowerCase().contains(needle) || c.country.toLowerCase().contains(needle),
+            (c) =>
+                c.lastName.toLowerCase().contains(needle) ||
+                c.country.toLowerCase().contains(needle),
           )
           .toList();
     }
@@ -68,9 +74,13 @@ class InMemoryConfectionerRepository implements ConfectionerRepository {
 
     rows.sort((a, b) {
       final result = switch (q.sortField) {
-        'firstName' => a.firstName.toLowerCase().compareTo(b.firstName.toLowerCase()),
+        'firstName' => a.firstName.toLowerCase().compareTo(
+          b.firstName.toLowerCase(),
+        ),
         'country' => a.country.toLowerCase().compareTo(b.country.toLowerCase()),
-        'specialty' => a.specialty.toLowerCase().compareTo(b.specialty.toLowerCase()),
+        'specialty' => a.specialty.toLowerCase().compareTo(
+          b.specialty.toLowerCase(),
+        ),
         _ => a.lastName.toLowerCase().compareTo(b.lastName.toLowerCase()),
       };
       return q.sortAscending ? result : -result;

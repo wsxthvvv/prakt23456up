@@ -31,7 +31,8 @@ class _DebouncedSearchFieldState extends State<DebouncedSearchField> {
   @override
   void didUpdateWidget(DebouncedSearchField oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.initialValue != widget.initialValue && _controller.text != widget.initialValue) {
+    if (oldWidget.initialValue != widget.initialValue &&
+        _controller.text != widget.initialValue) {
       _controller.text = widget.initialValue;
     }
   }
@@ -45,7 +46,10 @@ class _DebouncedSearchFieldState extends State<DebouncedSearchField> {
 
   void _schedule(String value) {
     _timer?.cancel();
-    _timer = Timer(const Duration(milliseconds: 300), () => widget.onChanged(value));
+    _timer = Timer(
+      const Duration(milliseconds: 300),
+      () => widget.onChanged(value),
+    );
   }
 
   @override
@@ -59,6 +63,7 @@ class _DebouncedSearchFieldState extends State<DebouncedSearchField> {
         suffixIcon: _controller.text.isEmpty
             ? null
             : IconButton(
+                tooltip: 'Очистить',
                 icon: const Icon(Icons.clear),
                 onPressed: () {
                   _controller.clear();

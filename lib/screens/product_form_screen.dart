@@ -81,8 +81,12 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     _stockAvailable.text = product == null ? '' : '${product.stockAvailable}';
     _categoryId = product?.categoryId;
     _workshopId = product?.workshopId;
-    _flavorIds = [...?product?.flavorTagIds].where(_allowedFlavorIds().contains).toList();
-    _confectionerIds = [...?product?.confectionerIds].where(_allowedConfectionerIds().contains).toList();
+    _flavorIds = [...?product?.flavorTagIds]
+        .where(_allowedFlavorIds().contains)
+        .toList();
+    _confectionerIds = [...?product?.confectionerIds]
+        .where(_allowedConfectionerIds().contains)
+        .toList();
     _initial = _snapshot();
     setState(() => _ready = true);
   }
@@ -108,71 +112,83 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
   }
 
   List<TextFieldSpec> get _fields => [
-        TextFieldSpec(
-          label: 'Название',
-          controller: _name,
-          onChanged: _touch,
-          validator: (value) {
-            final local = V.combine([V.required('Укажите название'), V.length(min: 2, max: 120)])(value);
-            return local ?? _serverErrors['name'];
-          },
-        ),
-        TextFieldSpec(
-          label: 'Артикул',
-          controller: _sku,
-          onChanged: _touch,
-          validator: (value) {
-            final local = V.combine([
-              V.required('Укажите артикул'),
-              V.length(min: 3, max: 32),
-            ])(value);
-            return local ?? _serverErrors['sku'];
-          },
-        ),
-        TextFieldSpec(
-          label: 'Год в ассортименте',
-          controller: _year,
-          keyboardType: TextInputType.number,
-          onChanged: _touch,
-          validator: (value) {
-            final local = V.combine([V.required('Укажите год'), V.integer(min: 1990, max: 2100)])(value);
-            return local ?? _serverErrors['year'];
-          },
-        ),
-        TextFieldSpec(
-          label: 'Масса, г',
-          controller: _weight,
-          keyboardType: TextInputType.number,
-          onChanged: _touch,
-          validator: V.combine([V.required('Укажите массу'), V.integer(min: 1, max: 20000)]),
-        ),
-        TextFieldSpec(
-          label: 'На складе, шт.',
-          controller: _stockTotal,
-          keyboardType: TextInputType.number,
-          onChanged: _touch,
-          validator: V.combine([V.required('Укажите количество'), V.integer(min: 1, max: 100000)]),
-        ),
-        TextFieldSpec(
-          label: 'Доступно, шт.',
-          controller: _stockAvailable,
-          keyboardType: TextInputType.number,
-          onChanged: _touch,
-          validator: (value) {
-            final local = V.combine([
-              V.required('Укажите доступный остаток'),
-              V.integer(min: 0, max: 100000),
-            ])(value);
-            if (local != null) return local;
-            final total = int.tryParse(_stockTotal.text.trim());
-            final available = int.tryParse(value?.trim() ?? '');
-            if (total != null && available != null && available > total) {
-              return 'Доступно не больше, чем на складе';
-            }
-            return null;
-          },
-        ),
-      ];
+    TextFieldSpec(
+      label: 'Название',
+      controller: _name,
+      onChanged: _touch,
+      validator: (value) {
+        final local = V.combine([
+          V.required('Укажите название'),
+          V.length(min: 2, max: 120),
+        ])(value);
+        return local ?? _serverErrors['name'];
+      },
+    ),
+    TextFieldSpec(
+      label: 'Артикул',
+      controller: _sku,
+      onChanged: _touch,
+      validator: (value) {
+        final local = V.combine([
+          V.required('Укажите артикул'),
+          V.length(min: 3, max: 32),
+        ])(value);
+        return local ?? _serverErrors['sku'];
+      },
+    ),
+    TextFieldSpec(
+      label: 'Год в ассортименте',
+      controller: _year,
+      keyboardType: TextInputType.number,
+      onChanged: _touch,
+      validator: (value) {
+        final local = V.combine([
+          V.required('Укажите год'),
+          V.integer(min: 1990, max: 2100),
+        ])(value);
+        return local ?? _serverErrors['year'];
+      },
+    ),
+    TextFieldSpec(
+      label: 'Масса, г',
+      controller: _weight,
+      keyboardType: TextInputType.number,
+      onChanged: _touch,
+      validator: V.combine([
+        V.required('Укажите массу'),
+        V.integer(min: 1, max: 20000),
+      ]),
+    ),
+    TextFieldSpec(
+      label: 'На складе, шт.',
+      controller: _stockTotal,
+      keyboardType: TextInputType.number,
+      onChanged: _touch,
+      validator: V.combine([
+        V.required('Укажите количество'),
+        V.integer(min: 1, max: 100000),
+      ]),
+    ),
+    TextFieldSpec(
+      label: 'Доступно, шт.',
+      controller: _stockAvailable,
+      keyboardType: TextInputType.number,
+      onChanged: _touch,
+      validator: (value) {
+        final local = V.combine([
+          V.required('Укажите доступный остаток'),
+          V.integer(min: 0, max: 100000),
+        ])(value);
+        if (local != null) return local;
+        final total = int.tryParse(_stockTotal.text.trim());
+        final available = int.tryParse(value?.trim() ?? '');
+        if (total != null && available != null && available > total) {
+          return 'Доступно не больше, чем на складе';
+        }
+        return null;
+      },
+    ),
+  ];
 
   void _onWorkshopChanged(int? id) {
     setState(() {
@@ -243,7 +259,8 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() => _saving = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.message)));
     }
   }
 
@@ -253,7 +270,10 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
       return Scaffold(
         appBar: AppBar(title: const Text('Изделие')),
         body: Center(
-          child: FilledButton(onPressed: () => context.go('/products'), child: const Text('К каталогу')),
+          child: FilledButton(
+            onPressed: () => context.go('/products'),
+            child: const Text('К каталогу'),
+          ),
         ),
       );
     }
@@ -262,7 +282,11 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     }
 
     final references = context.watch<ReferenceRepository>();
-    final workshops = context.watch<WorkshopRepository>().all.where((w) => !w.isDeleted || w.id == _workshopId).toList();
+    final workshops = context
+        .watch<WorkshopRepository>()
+        .all
+        .where((w) => !w.isDeleted || w.id == _workshopId)
+        .toList();
     final flavors = context.watch<FlavorRepository>().all;
     final confectioners = context.watch<ConfectionerRepository>().all;
     final allowedFlavors = _allowedFlavorIds();
@@ -281,7 +305,9 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
           ChoiceDropdownField<int>(
             label: 'Категория',
             value: _categoryId,
-            options: [for (final category in references.categories) category.id],
+            options: [
+              for (final category in references.categories) category.id,
+            ],
             labelOf: references.categoryName,
             onChanged: (value) => setState(() => _categoryId = value),
           ),
@@ -302,24 +328,34 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
           MultiIdField(
             label: 'Вкусы',
             value: _flavorIds,
-            emptyHint: _workshopId == null ? 'Сначала выберите цех' : 'У цеха нет доступных вкусов',
+            emptyHint: _workshopId == null
+                ? 'Сначала выберите цех'
+                : 'У цеха нет доступных вкусов',
             options: [
               for (final flavor in flavors)
-                if (!flavor.isDeleted && allowedFlavors.contains(flavor.id)) (id: flavor.id, label: flavor.name),
+                if (!flavor.isDeleted && allowedFlavors.contains(flavor.id))
+                  (id: flavor.id, label: flavor.name),
             ],
             onChanged: (value) => setState(() => _flavorIds = value),
-            validator: (value) => (value == null || value.isEmpty) ? 'Выберите хотя бы один вкус' : null,
+            validator: (value) => (value == null || value.isEmpty)
+                ? 'Выберите хотя бы один вкус'
+                : null,
           ),
           MultiIdField(
             label: 'Кондитеры',
             value: _confectionerIds,
-            emptyHint: _workshopId == null ? 'Сначала выберите цех' : 'В этом цехе нет кондитеров',
+            emptyHint: _workshopId == null
+                ? 'Сначала выберите цех'
+                : 'В этом цехе нет кондитеров',
             options: [
               for (final confectioner in confectioners)
-                if (allowedChefs.contains(confectioner.id)) (id: confectioner.id, label: confectioner.fullName),
+                if (allowedChefs.contains(confectioner.id))
+                  (id: confectioner.id, label: confectioner.fullName),
             ],
             onChanged: (value) => setState(() => _confectionerIds = value),
-            validator: (value) => (value == null || value.isEmpty) ? 'Выберите хотя бы одного кондитера' : null,
+            validator: (value) => (value == null || value.isEmpty)
+                ? 'Выберите хотя бы одного кондитера'
+                : null,
           ),
         ],
       ),

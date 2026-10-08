@@ -16,7 +16,10 @@ class NotFoundScreen extends StatelessWidget {
           children: [
             Text('Адрес не найден: $location'),
             const SizedBox(height: 16),
-            FilledButton(onPressed: () => context.go('/'), child: const Text('На главную')),
+            FilledButton(
+              onPressed: () => context.go('/'),
+              child: const Text('На главную'),
+            ),
           ],
         ),
       ),

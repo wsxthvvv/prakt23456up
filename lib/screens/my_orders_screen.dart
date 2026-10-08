@@ -43,10 +43,15 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
     try {
       final response = await context.read<Dio>().get('/my-orders');
       final data = response.data;
-      final items = data is Map && data['items'] is List ? data['items'] as List : const [];
+      final items = data is Map && data['items'] is List
+          ? data['items'] as List
+          : const [];
       if (!mounted) return;
       setState(() {
-        _items = [for (final item in items) if (item is Map) Map<String, dynamic>.from(item)];
+        _items = [
+          for (final item in items)
+            if (item is Map) Map<String, dynamic>.from(item),
+        ];
         _loading = false;
       });
     } on DioException catch (error) {
@@ -60,7 +65,9 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
 
   Future<void> _place() async {
     final qty = int.tryParse(_qty.text.trim());
-    final productError = _product.text.trim().length < 2 ? 'Укажите изделие' : null;
+    final productError = _product.text.trim().length < 2
+        ? 'Укажите изделие'
+        : null;
     final qtyError = qty == null || qty < 1 ? 'Укажите количество' : null;
     setState(() {
       _productError = productError;
@@ -69,10 +76,10 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
     if (productError != null || qtyError != null) return;
     setState(() => _busy = true);
     try {
-      await context.read<Dio>().post('/my-orders', data: {
-        'productName': _product.text.trim(),
-        'qty': qty,
-      });
+      await context.read<Dio>().post(
+        '/my-orders',
+        data: {'productName': _product.text.trim(), 'qty': qty},
+      );
       _product.clear();
       await _load();
     } on DioException catch (error) {
@@ -96,29 +103,55 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Мои заказы'),
-        actions: [IconButton(onPressed: () => context.go('/'), icon: const Icon(Icons.home))],
+        actions: [
+          IconButton(
+            tooltip: 'На главную',
+            onPressed: () => context.go('/'),
+            icon: const Icon(Icons.home),
+          ),
+        ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          const Text('Этот экран есть только у покупателя: здесь свои заказы, чужие не видны.'),
+          const Text(
+            'Этот экран есть только у покупателя: здесь свои заказы, чужие не видны.',
+          ),
           const SizedBox(height: 16),
-          TextField(controller: _product, decoration: InputDecoration(labelText: 'Изделие', errorText: _productError)),
+          TextField(
+            controller: _product,
+            decoration: InputDecoration(
+              labelText: 'Изделие',
+              errorText: _productError,
+            ),
+          ),
           const SizedBox(height: 12),
           TextField(
             controller: _qty,
-            decoration: InputDecoration(labelText: 'Количество', errorText: _qtyError),
+            decoration: InputDecoration(
+              labelText: 'Количество',
+              errorText: _qtyError,
+            ),
             keyboardType: TextInputType.number,
           ),
           const SizedBox(height: 12),
-          FilledButton(onPressed: _busy ? null : _place, child: const Text('Оформить заказ')),
+          FilledButton(
+            onPressed: _busy ? null : _place,
+            child: const Text('Оформить заказ'),
+          ),
           const SizedBox(height: 16),
           if (_loading) const Center(child: CircularProgressIndicator()),
-          if (_error != null) Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+          if (_error != null)
+            Text(
+              _error!,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
           for (final item in _items)
             ListTile(
               title: Text('${item['productName']}'),
-              subtitle: Text('${item['qty']} шт. · ${item['status'] == 'closed' ? 'закрыт' : 'открыт'}'),
+              subtitle: Text(
+                '${item['qty']} шт. · ${item['status'] == 'closed' ? 'закрыт' : 'открыт'}',
+              ),
             ),
         ],
       ),

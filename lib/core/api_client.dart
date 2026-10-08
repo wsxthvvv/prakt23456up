@@ -61,7 +61,9 @@ Dio buildDio({
           await onSessionLost?.call();
         }
         if (kDebugMode && status < 400) {
-          debugPrint('[API] ${response.requestOptions.method} ${response.requestOptions.uri} → $status');
+          debugPrint(
+            '[API] ${response.requestOptions.method} ${response.requestOptions.uri} → $status',
+          );
         }
         if (status >= 400) {
           return handler.reject(
@@ -79,7 +81,9 @@ Dio buildDio({
       onError: (error, handler) async {
         if (kDebugMode) {
           final status = error.response?.statusCode ?? error.type.name;
-          debugPrint('[API] ${error.requestOptions.method} ${error.requestOptions.uri} → $status');
+          debugPrint(
+            '[API] ${error.requestOptions.method} ${error.requestOptions.uri} → $status',
+          );
         }
         var current = error;
         while (_canRetry(current)) {
@@ -87,7 +91,9 @@ Dio buildDio({
           final attempt = options.extra['attempt'] as int? ?? 0;
           if (attempt >= 2) break;
           options.extra['attempt'] = attempt + 1;
-          await Future<void>.delayed(Duration(milliseconds: 200 * (attempt + 1)));
+          await Future<void>.delayed(
+            Duration(milliseconds: 200 * (attempt + 1)),
+          );
           try {
             final response = await dio.fetch(options);
             return handler.resolve(response);
@@ -119,8 +125,7 @@ bool _canRetry(DioException error) {
     DioExceptionType.connectionTimeout ||
     DioExceptionType.sendTimeout ||
     DioExceptionType.receiveTimeout ||
-    DioExceptionType.connectionError =>
-      true,
+    DioExceptionType.connectionError => true,
     _ => false,
   };
 }

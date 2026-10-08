@@ -34,18 +34,18 @@ class Flavor {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'description': description,
-        'intensity': intensity,
-        'deletedAt': deletedAt?.toIso8601String(),
-      };
+    'id': id,
+    'name': name,
+    'description': description,
+    'intensity': intensity,
+    'deletedAt': deletedAt?.toIso8601String(),
+  };
 
   factory Flavor.fromJson(Map<String, dynamic> json) => Flavor(
-        id: jsonInt(json['id']),
-        name: jsonString(json['name']),
-        description: jsonString(json['description']),
-        intensity: jsonInt(json['intensity'], 1),
-        deletedAt: jsonDate(json['deletedAt']),
-      );
+    id: jsonInt(json['id']),
+    name: jsonString(json['name']),
+    description: jsonString(json['description']),
+    intensity: jsonInt(json['intensity'], 1),
+    deletedAt: jsonDate(json['deletedAt']),
+  );
 }

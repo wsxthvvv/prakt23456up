@@ -31,7 +31,8 @@ class _FlavorFormScreenState extends State<FlavorFormScreen> {
   bool _missing = false;
   bool _saving = false;
 
-  CatalogNotifier<Flavor, FlavorQuery> get _list => context.read<CatalogNotifier<Flavor, FlavorQuery>>();
+  CatalogNotifier<Flavor, FlavorQuery> get _list =>
+      context.read<CatalogNotifier<Flavor, FlavorQuery>>();
 
   bool get _dirty => _ready && _snapshot() != _initial;
 
@@ -92,7 +93,8 @@ class _FlavorFormScreenState extends State<FlavorFormScreen> {
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() => _saving = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.message)));
     }
   }
 
@@ -101,30 +103,46 @@ class _FlavorFormScreenState extends State<FlavorFormScreen> {
     if (_missing) {
       return Scaffold(
         appBar: AppBar(title: const Text('Вкус')),
-        body: Center(child: FilledButton(onPressed: () => context.go('/flavors'), child: const Text('К списку'))),
+        body: Center(
+          child: FilledButton(
+            onPressed: () => context.go('/flavors'),
+            child: const Text('К списку'),
+          ),
+        ),
       );
     }
-    if (!_ready) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (!_ready) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
     final fields = [
       TextFieldSpec(
         label: 'Название',
         controller: _name,
         onChanged: (_) => setState(() {}),
-        validator: V.combine([V.required('Укажите название'), V.length(min: 2, max: 40)]),
+        validator: V.combine([
+          V.required('Укажите название'),
+          V.length(min: 2, max: 40),
+        ]),
       ),
       TextFieldSpec(
         label: 'Описание',
         controller: _description,
         maxLines: 3,
         onChanged: (_) => setState(() {}),
-        validator: V.combine([V.required('Укажите описание'), V.length(min: 3, max: 200)]),
+        validator: V.combine([
+          V.required('Укажите описание'),
+          V.length(min: 3, max: 200),
+        ]),
       ),
       TextFieldSpec(
         label: 'Интенсивность (1–5)',
         controller: _intensity,
         keyboardType: TextInputType.number,
         onChanged: (_) => setState(() {}),
-        validator: V.combine([V.required('Укажите интенсивность'), V.integer(min: 1, max: 5)]),
+        validator: V.combine([
+          V.required('Укажите интенсивность'),
+          V.integer(min: 1, max: 5),
+        ]),
       ),
     ];
     return FormScaffold(

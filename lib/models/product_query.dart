@@ -39,10 +39,10 @@ class ProductQuery {
   }) {
     return ProductQuery(
       search: search ?? this.search,
-      flavorTagId:
-          flavorTagId == _unset ? this.flavorTagId : flavorTagId as int?,
-      categoryId:
-          categoryId == _unset ? this.categoryId : categoryId as int?,
+      flavorTagId: flavorTagId == _unset
+          ? this.flavorTagId
+          : flavorTagId as int?,
+      categoryId: categoryId == _unset ? this.categoryId : categoryId as int?,
       yearFrom: yearFrom == _unset ? this.yearFrom : yearFrom as int?,
       yearTo: yearTo == _unset ? this.yearTo : yearTo as int?,
       sortField: sortField ?? this.sortField,

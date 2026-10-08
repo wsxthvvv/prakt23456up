@@ -21,7 +21,8 @@ class ApiReferenceRepository implements ReferenceRepository {
     final specialties = await _items('/specialties');
     _categories = [
       for (final item in categories)
-        if (item is Map) ProductCategory.fromJson(Map<String, dynamic>.from(item)),
+        if (item is Map)
+          ProductCategory.fromJson(Map<String, dynamic>.from(item)),
     ];
     _countries = [for (final item in countries) jsonString(item)];
     _specialties = [for (final item in specialties) jsonString(item)];
@@ -29,11 +30,14 @@ class ApiReferenceRepository implements ReferenceRepository {
   }
 
   Future<List<dynamic>> _items(String path) => guard(() async {
-        final response = await _dio.get(path, queryParameters: {'page': 1, 'size': 100});
-        final data = response.data;
-        if (data is Map && data['items'] is List) return data['items'] as List;
-        throw const ServerException('Сервер вернул неожиданный ответ.');
-      });
+    final response = await _dio.get(
+      path,
+      queryParameters: {'page': 1, 'size': 100},
+    );
+    final data = response.data;
+    if (data is Map && data['items'] is List) return data['items'] as List;
+    throw const ServerException('Сервер вернул неожиданный ответ.');
+  });
 
   @override
   List<ProductCategory> get categories => List.unmodifiable(_categories);

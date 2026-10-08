@@ -36,7 +36,10 @@ class ChoiceDropdownField<T> extends StatelessWidget {
       key: ValueKey('$label-$safe'),
       isExpanded: true,
       initialValue: safe,
-      decoration: InputDecoration(labelText: label, border: const OutlineInputBorder()),
+      decoration: InputDecoration(
+        labelText: label,
+        border: const OutlineInputBorder(),
+      ),
       items: [
         for (final option in options)
           DropdownMenuItem(
@@ -45,7 +48,9 @@ class ChoiceDropdownField<T> extends StatelessWidget {
           ),
       ],
       onChanged: onChanged,
-      validator: validator ?? (selected) => selected == null ? 'Выберите значение' : null,
+      validator:
+          validator ??
+          (selected) => selected == null ? 'Выберите значение' : null,
     );
   }
 }

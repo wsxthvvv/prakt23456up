@@ -29,7 +29,10 @@ class JsonStore {
       }
       return [
         for (final item in decoded)
-          if (item is Map) fromJson(Map<String, dynamic>.from(item)) else throw const FormatException('expected object'),
+          if (item is Map)
+            fromJson(Map<String, dynamic>.from(item))
+          else
+            throw const FormatException('expected object'),
       ];
     } catch (_) {
       storage.report(
@@ -41,7 +44,11 @@ class JsonStore {
     }
   }
 
-  Future<void> save<T>(String key, List<T> items, Map<String, dynamic> Function(T item) toJson) {
+  Future<void> save<T>(
+    String key,
+    List<T> items,
+    Map<String, dynamic> Function(T item) toJson,
+  ) {
     return storage.prefs.setString(key, jsonEncode(items.map(toJson).toList()));
   }
 }
